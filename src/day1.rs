@@ -22,6 +22,7 @@ pub fn gen1(input: &str) -> Vec<Vec<u32>> {
             elf.push(line.parse().unwrap());
         }
     }
+    elves.push(elf);
     elves
 }
 
@@ -55,14 +56,12 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        let data = gen1(EX1);
-        let ans = part1(&data);
-        assert_eq!(ans, 24000);
+        assert_eq!(part1(&gen1(EX1)), 24000);
     }
 
     #[test]
-    fn test_ex2_part2() {
-        assert_eq!(888, 999);
+    fn test_ex1_part2() {
+        assert_eq!(part2(&gen1(EX1)), 45000);
     }
 
 const EX1: &'static str =
