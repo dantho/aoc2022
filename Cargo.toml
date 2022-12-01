@@ -1,0 +1,20 @@
+[package]
+name = "advent-of-code-2022"
+version = "0.1.0"
+authors = ["Dan Thornton <dan.thornton+git@thornton.me>"]
+edition = "2018"
+
+[lib]
+bench = false
+
+[dependencies]
+aoc-runner = "0.3"
+aoc-runner-derive = "0.3.0"
+rust-crypto = "0.2.36"
+colored = "2"
+crossterm = "0.25"
+# regex = "1"
+# lazy_static = "1.4"
+# num-integer = "0.1"
+# modinverse = "0.1"
+# ring-algorithm = "0.4"

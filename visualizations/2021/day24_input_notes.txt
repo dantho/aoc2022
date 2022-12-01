@@ -1,0 +1,73 @@
+inp w
+mul x 0
+add x z,
+mod x 26
+div z 1   //  1, 1, 1,26, 1, 1, 26, 1,26,26,26,26,26
+add x 14  // 13,15,13,-2,10,13,-15,11,-9,-9,-7,-4,-6
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 0  // 12,14,0,3,15,11,12,1,12,3,10,14,12 unique2
+mul y x
+add z y
+
+x = z%26
+z = if uniq1 > 0 (also >9) {z} else {z/26}
+x = if x+uniq1 == input {0} else {1}
+y = x*25+1
+z = z * y
+y = x * (input + uniq2)
+z = z + y
+
+x = z%26
+z = if uniq1 > 0 (also >9) {z} else {z/26}
+x = if x+uniq1 == input {0} else {1}
+z = z * (x*25+1)
+z = z + x * (input + uniq2)
+
+x = z%26
+x = if x+uniq1 == input {0} else {1}
+z = if uniq1 > 0 (also >9) {z} else {z/26}
+z = z * (x*25+1)
+z = z + x * (input + uniq2)
+
+if input == z%26 + uniq1 {
+    z = if uniq1 > 0 (also >9) {z} else {z/26}
+} else {
+    z = if uniq1 > 0 (also >9) {z} else {z/26}
+    z = z*26 + input + uniq2
+}
+
+if uniq1 > 0
+    z = input + uniq2 + z*26 // increase order by 1, add a new remainder (input + uniq2)
+else if input == z%26 + uniq1 
+    z = z/26 // Assuming % -> positive only // reduce order by 1, clear remainder
+else
+    z = input + uniq2 + z/26*26  // clear old remainder, add a new remainder (input + uniq2)
+}
+
+Given
+input:  0, 1, 2, 3, 4, 5, 6,  7, 8, 9,10,11,12,13
+uniq1: 14,13,15,13,-2,10,13,-15,11,-9,-9,-7,-4,-6
+uniq2:  0,12,14, 0, 3,15,11, 12, 1,12, 3,10,14,12
+
+0  9 
+1  9 
+2  9 
+3  9 
+4  9 
+5  9 
+6  9 
+7  9 
+8  9 
+9  9 
+10 9 
+11 9 
+12 9 
+13 9 
