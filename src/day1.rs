@@ -11,8 +11,8 @@
 // *** Generator(s) ***
 // ********************/
 #[aoc_generator(day1)]
-pub fn gen1(input: &str) -> Vec<Vec<u16>> {
-    let mut elf = Vec::<u16>::new();
+pub fn gen1(input: &str) -> Vec<Vec<u32>> {
+    let mut elf = Vec::<u32>::new();
     let mut elves = Vec::new();
     for line in input.lines() {
         if line == "" {
@@ -29,7 +29,7 @@ pub fn gen1(input: &str) -> Vec<Vec<u16>> {
 // *** Part1 & Part2 ***
 // *********************
 #[aoc(day1, part1)]
-pub fn part1(input: &Vec<Vec<u16>>) -> u16 {
+pub fn part1(input: &Vec<Vec<u32>>) -> u32 {
     input.iter()
         .map(|elf|elf.iter()
             .fold(0,|sum,item|sum+item)).max().unwrap()
@@ -44,7 +44,9 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        assert_eq!(888, 999);
+        let data = gen1(EX1);
+        let ans = part1(&data);
+        assert_eq!(ans, 24000);
     }
 
     #[test]
@@ -53,11 +55,19 @@ mod tests {
     }
 
 const EX1: &'static str =
-r"
-";
+r"1000
+2000
+3000
 
-const EX2: &'static str =
-r"
-";
+4000
+
+5000
+6000
+
+7000
+8000
+9000
+
+10000";
 
 }
