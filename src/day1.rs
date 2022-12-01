@@ -35,6 +35,17 @@ pub fn part1(input: &Vec<Vec<u32>>) -> u32 {
             .fold(0,|sum,item|sum+item)).max().unwrap()
 }
 
+#[aoc(day1, part2)]
+pub fn part2(input: &Vec<Vec<u32>>) -> u32 {
+    let mut calories: Vec<u32> = input.iter()
+        .map(|elf|elf.iter()
+            .fold(0,|sum,item|sum+item)).collect();
+    calories.sort();
+    calories.reverse();
+    calories.iter().take(3).sum()
+
+}
+
 // *************
 // *** Tests ***
 // *************
