@@ -88,13 +88,14 @@ pub fn gen2(input: &str) -> Vec<(RockPaperScissors,RockPaperScissors)> {
         let mut play = line.split(' ');
         let vs = play.next().unwrap().parse::<RockPaperScissors>().unwrap();
         let me = match play.next().unwrap() {
+            // X means you need to lose,
+            // Y means you need to end the round in a draw, and
+            // Z means you need to win.
+            // "+ 2" below is equivalent to -1 in mod 3 math
             "X" => RockPaperScissors::from((vs as u32 + 2) % 3),
             "Y" => vs,
             "Z" => RockPaperScissors::from((vs as u32 + 1) % 3),
             bad => panic!("Unexpected instructional play \"{}\"", bad)
-            // "X means you need to lose,
-            //  Y means you need to end the round in a draw,
-            //  and Z means you need to win."
         };
         (vs, me)
     }).collect()
