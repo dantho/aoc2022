@@ -12,19 +12,31 @@ use std::str::FromStr;
 // ********************
 // *** Generator(s) ***
 // ********************/
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum RockPaperScissors {
-    Rock,
+    Rock = 1,
     Paper,
     Scissors
 }
 
 impl RockPaperScissors {
-    fn ToU32(self) -> u32 {
-        match self {
-            Self::Rock => 1,
-            Self::Paper => 2,
-            Self::Scissors => 3
+    fn score(self, vs: RockPaperScissors) -> u32 {
+        self as u32 + match self {
+            Self::Rock => match vs {
+                Self::Rock => 3,
+                Self::Paper => 0,
+                Self::Scissors => 6
+            }
+            Self::Paper => match vs {
+                Self::Rock => 6,
+                Self::Paper => 3,
+                Self::Scissors => 0
+            }
+            Self::Scissors => match vs {
+                Self::Rock => 0,
+                Self::Paper => 6,
+                Self::Scissors => 3
+            }
         }
     }
 }
@@ -65,7 +77,10 @@ pub fn gen1(input: &str) -> Vec<(RockPaperScissors,RockPaperScissors)> {
 // *********************
 #[aoc(day2, part1)]
 pub fn part1(input: &[(RockPaperScissors,RockPaperScissors)]) -> u32 {
-    0
+    let ans = input.iter().map(|pair|pair.1.score(pair.0)).sum();
+    #[cfg(not(test))]
+    assert!(ans > 11333);
+    ans
 }
 
 // *************
@@ -77,9 +92,7 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        let gen = gen1(EX1);
-        println!("{:?}", gen);
-        assert_eq!(part1(&gen1(EX1)), 24000);
+        assert_eq!(part1(&gen1(EX1)), 15);
     }
 
 const EX1: &'static str =
