@@ -1,4 +1,4 @@
-/// https://adventofcode.com/2022/day/2
+/// https://adventofcode.com/2022/day/3
 /// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786 
 /// TER: https://adventofcode.com/2022/leaderboard/private/view/951754 
 /// 
