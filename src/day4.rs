@@ -45,6 +45,21 @@ pub fn part1(input: &[((u32,u32),(u32,u32))]) -> usize {
     }).count()
 }
 
+#[aoc(day4, part2)]
+pub fn part2(input: &[((u32,u32),(u32,u32))]) -> usize {
+    input.iter()
+    .filter(|elf| {
+        elf.0.0 == elf.1.0 ||
+        if elf.0.0 < elf.1.0 {
+            // does elf.0's range end on or after elf.1's start?
+            elf.0.1 >= elf.1.0
+        } else {
+            // does elf.1's range end on or after elf.0's start?
+            elf.1.1 >= elf.0.0
+        }
+    }).count()
+}
+
 fn vecpair2tuple<T: Copy>(pair_as_vec: Vec<T>) -> (T,T) {
     (pair_as_vec[0], pair_as_vec[1])
 }
@@ -58,6 +73,11 @@ mod tests {
     #[test]
     fn test_ex1_part1() {
         assert_eq!(part1(&gen1(EX1)), 2);
+    }
+
+    #[test]
+    fn test_ex1_part2() {
+        assert_eq!(part2(&gen1(EX1)), 4);
     }
 
 const EX1: &'static str =
