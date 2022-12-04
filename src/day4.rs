@@ -33,13 +33,14 @@ pub fn gen1(input: &str) -> Vec<((u32,u32),(u32,u32))> {
 #[aoc(day4, part1)]
 pub fn part1(input: &[((u32,u32),(u32,u32))]) -> usize {
     input.iter()
-    .filter(|elves| {
-        let elf0 = elves.0;
-        let elf1 = elves.1;
-        if elf0.0 >= elf1.0 {
-            elf0.1 <= elf1.1
+    .filter(|elf| {
+        elf.0.0 == elf.1.0 ||
+        if elf.0.0 < elf.1.0 {
+            // does elf.0 contain elf.1?
+            elf.0.1 >= elf.1.1
         } else {
-            elf0.1 >= elf1.1
+            // does elf.1 contain elf.0?
+            elf.0.1 <= elf.1.1
         }
     }).count()
 }
@@ -56,12 +57,7 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        assert_eq!(part1(&gen1(EX1)), 157);
-    }
-
-    #[test]
-    fn test_ex1_part2() {
-        assert_eq!(part2(&gen1(EX1)), 70);
+        assert_eq!(part1(&gen1(EX1)), 2);
     }
 
 const EX1: &'static str =
