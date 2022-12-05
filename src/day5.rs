@@ -11,7 +11,7 @@
 // *** Generator(s) ***
 // ********************/
 #[aoc_generator(day5)]
-pub fn gen1(input: &str) -> (Vec<Vec<Option<char>>>, Vec<Vec<u16>>) {
+pub fn gen1(input: &str) -> (Vec<Vec<Option<char>>>, Vec<Vec<usize>>) {
     let mut lines = input.lines();
     let mut crates: Vec<Vec<Option<char>>> = Vec::new();
     let mut row = lines.next().unwrap();
@@ -37,7 +37,7 @@ pub fn gen1(input: &str) -> (Vec<Vec<Option<char>>>, Vec<Vec<u16>>) {
     let moves = lines.map(|line|{
         line.split(' ')
         .skip(1).step_by(2)
-        .map(|n|n.parse::<u16>().unwrap())
+        .map(|n|n.parse::<usize>().unwrap())
         .collect::<Vec<_>>()
     }).collect::<Vec<_>>();
 
@@ -48,8 +48,38 @@ pub fn gen1(input: &str) -> (Vec<Vec<Option<char>>>, Vec<Vec<u16>>) {
 // *** Part1 & Part2 ***
 // *********************
 #[aoc(day5, part1)]
-pub fn part1(input: &(Vec<Vec<Option<char>>>, Vec<Vec<u16>>)) -> usize {
-    0
+pub fn part1(input: &(Vec<Vec<Option<char>>>, Vec<Vec<usize>>)) -> String {
+    let (crates, moves) = input;
+    let mut transposed = Vec::new();
+    for _col in 0..crates[0].len() {
+        transposed.push(Vec::new());
+    }
+    // Transpose crates from fully populated rows of crates (with blanks)
+    // to sparsely populated columns of crates in reversed (LIFO) order.
+    let mut crates: Vec<Vec<char>> = crates.iter().rev()
+    .fold(transposed, |mut trsposd, row| {
+        for (c_ndx, maybe_v) in row.iter().enumerate() {
+            if let Some(v) = maybe_v {
+                trsposd[c_ndx].push(*v);
+            }
+        }
+        trsposd
+    });
+    // Move crates (count/from/to)
+    for move_cmd in moves {
+        #[cfg(test)]
+        println!("crates: {:?}", crates);
+        #[cfg(test)]
+        println!("move {} from {} to {}", move_cmd[0], move_cmd[1], move_cmd[2]);
+        for _cnt in 0..move_cmd[0] {
+            let tmp = crates[move_cmd[1]-1].pop().unwrap();
+            crates[move_cmd[2]-1].push(tmp);
+        }
+    }
+    #[cfg(test)]
+    println!("crates: {:?}", crates);
+    let tops: String = crates.into_iter().map(|mut col|col.pop().unwrap()).collect();
+    tops    
 }
 
 // *************
@@ -60,7 +90,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ex1_part1() {
+    fn test_ex1_gen1() {
         let (crates, moves) = gen1(EX1);
         assert_eq!(crates.len(), 3);
         assert_eq!(moves.len(), 4);
@@ -68,6 +98,12 @@ mod tests {
         assert_eq!(crates[2], [Some('Z'), Some('M'), Some('P')]);
         assert_eq!(moves[0][0], 1);
         assert_eq!(moves[3][2], 2);
+    }
+
+    #[test]
+    fn test_ex1_part1() {
+        let ans = part1(&gen1(EX1));
+        assert_eq!(ans, "CMZ");
     }
 
     // #[test]
