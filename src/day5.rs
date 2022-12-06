@@ -7,11 +7,13 @@
 // extern crate regex;
 // use self::regex::{Captures, Regex};
 
+use std::cmp::Reverse;
+
 // ********************
 // *** Generator(s) ***
 // ********************/
 #[aoc_generator(day5)]
-pub fn gen1(input: &str) -> (Vec<Vec<Option<char>>>, Vec<Vec<usize>>) {
+pub fn gen1(input: &str) -> (Vec<Vec<char>>, Vec<Vec<usize>>) {
     let mut lines = input.lines();
     let mut crates: Vec<Vec<Option<char>>> = Vec::new();
     let mut row = lines.next().unwrap();
@@ -32,7 +34,7 @@ pub fn gen1(input: &str) -> (Vec<Vec<Option<char>>>, Vec<Vec<usize>>) {
             None => {break}
         }
     }
-    // Crates done, now process moves
+    // Crates done, now parse moves
     lines.next().unwrap(); // Discard one blank line
     let moves = lines.map(|line|{
         line.split(' ')
@@ -41,22 +43,13 @@ pub fn gen1(input: &str) -> (Vec<Vec<Option<char>>>, Vec<Vec<usize>>) {
         .collect::<Vec<_>>()
     }).collect::<Vec<_>>();
 
-    (crates, moves)
-}
-
-// *********************
-// *** Part1 & Part2 ***
-// *********************
-#[aoc(day5, part1)]
-pub fn part1(input: &(Vec<Vec<Option<char>>>, Vec<Vec<usize>>)) -> String {
-    let (crates, moves) = input;
+    // Transpose crates from fully populated rows of crates (with blanks)
+    // to sparsely populated columns of crates in reversed (LIFO) order.
     let mut transposed = Vec::new();
     for _col in 0..crates[0].len() {
         transposed.push(Vec::new());
     }
-    // Transpose crates from fully populated rows of crates (with blanks)
-    // to sparsely populated columns of crates in reversed (LIFO) order.
-    let mut crates: Vec<Vec<char>> = crates.iter().rev()
+    let crates: Vec<Vec<char>> = crates.iter().rev()
     .fold(transposed, |mut trsposd, row| {
         for (c_ndx, maybe_v) in row.iter().enumerate() {
             if let Some(v) = maybe_v {
@@ -65,7 +58,18 @@ pub fn part1(input: &(Vec<Vec<Option<char>>>, Vec<Vec<usize>>)) -> String {
         }
         trsposd
     });
-    // Move crates (count/from/to)
+
+    (crates, moves)
+}
+
+// *********************
+// *** Part1 & Part2 ***
+// *********************
+#[aoc(day5, part1)]
+pub fn part1(input: &(Vec<Vec<char>>, Vec<Vec<usize>>)) -> String {
+    let (crates, moves) = input;
+    // Move crates [count/from/to] (note move indices are 1-based!)
+    let mut crates = crates.clone();
     for move_cmd in moves {
         #[cfg(test)]
         println!("crates: {:?}", crates);
@@ -75,6 +79,29 @@ pub fn part1(input: &(Vec<Vec<Option<char>>>, Vec<Vec<usize>>)) -> String {
             let tmp = crates[move_cmd[1]-1].pop().unwrap();
             crates[move_cmd[2]-1].push(tmp);
         }
+    }
+    #[cfg(test)]
+    println!("crates: {:?}", crates);
+    let tops: String = crates.into_iter().map(|mut col|col.pop().unwrap()).collect();
+    tops    
+}
+
+#[aoc(day5, part2)]
+pub fn part2(input: &(Vec<Vec<char>>, Vec<Vec<usize>>)) -> String {
+    let (crates, moves) = input;
+    // Move crates [count/from/to] (note move indices are 1-based!)
+    let mut crates = crates.clone();
+    for move_cmd in moves {
+        #[cfg(test)]
+        println!("crates: {:?}", crates);
+        #[cfg(test)]
+        println!("move {} from {} to {}", move_cmd[0], move_cmd[1], move_cmd[2]);
+        let mut tmp = Vec::new();
+        for _cnt in 0..move_cmd[0] {
+            tmp.push(crates[move_cmd[1]-1].pop().unwrap());
+        }
+        tmp.reverse();
+        crates[move_cmd[2]-1].append(&mut tmp);
     }
     #[cfg(test)]
     println!("crates: {:?}", crates);
@@ -94,8 +121,9 @@ mod tests {
         let (crates, moves) = gen1(EX1);
         assert_eq!(crates.len(), 3);
         assert_eq!(moves.len(), 4);
-        assert_eq!(crates[0], [None, Some('D'), None]);
-        assert_eq!(crates[2], [Some('Z'), Some('M'), Some('P')]);
+        assert_eq!(crates[0], ['Z', 'N']);
+        assert_eq!(crates[1], ['M', 'C', 'D']);
+        assert_eq!(crates[2], ['P']);
         assert_eq!(moves[0][0], 1);
         assert_eq!(moves[3][2], 2);
     }
@@ -106,10 +134,10 @@ mod tests {
         assert_eq!(ans, "CMZ");
     }
 
-    // #[test]
-    // fn test_ex1_part2() {
-    //     assert_eq!(part2(&gen1(EX1)), 4);
-    // }
+    #[test]
+    fn test_ex1_part2() {
+        assert_eq!(part2(&gen1(EX1)), "MCD");
+    }
 
 const EX1: &'static str =
 r"    [D]    
