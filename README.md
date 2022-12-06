@@ -3,9 +3,12 @@
 
 [My Rust solutions](https://github.com/dantho/aoc2022) (This repo)
 
-Every year gets a bit ugly at the end.  My protocol when things _should_ work, but just don't:
-1. Carefully re-read the challenge discription to validate my understanding and to look for edge-case details (which are explicitly covered whenever there is any ambiguity.)
-1. Create the test cases if I initially skipped them.  The examples are provided for that reason.
-1. Walk through the code, especially the initial steps before it scales up (way up!) and validate the intermediate state of things.
-1. If ordinary debugging isn't helpful, I sometimes downgrade to "printf debugging" -- especially helpful to identify when loops go wrong.
-1. Get hints when I'm stuck, or not confident in my approach.  Reddit's [SOLUTION MEGATHREAD](https://www.reddit.com/r/adventofcode/search?q=flair_name%3A%22SOLUTION%20MEGATHREAD%22) is a great place for "hints".  It is helpful to remember that the leaderboard is full of people who solved the same puzzle very quickly.  What am I proving if I continue to struggle after 3, 4, or 10 hours?  I should get a hint before I get to that point.
+## Issues/Gotchas/Hints by day:
+
+### Day 4:
+
+Parsing input data _could have been done_ in about 10 minutes in VS Code.  Took more than 1 hour in code.  :(
+
+### Day 5:
+
+Parsing two types of data was a pain, took much more time that algo did.  Crates section of input had to be transposed so columns were vectors of crates whereas reading input line by line tends to make rows as vectors of crates.  Used pop/push for part 1. Used temporary storage and vec.append() for part 2.  Didn't visualize.  :(
