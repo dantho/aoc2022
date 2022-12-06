@@ -1,9 +1,9 @@
 /// https://adventofcode.com/2022/day/1
-/// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786 
-/// TER: https://adventofcode.com/2022/leaderboard/private/view/951754 
-/// 
+/// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786
+/// TER: https://adventofcode.com/2022/leaderboard/private/view/951754
+///
 /// https://docs.rs/regex/1.4.2/regex/
-/// https://docs.rs/regex/1.4.2/regex/#syntax 
+/// https://docs.rs/regex/1.4.2/regex/#syntax
 // extern crate regex;
 // use self::regex::{Captures, Regex};
 
@@ -31,20 +31,22 @@ pub fn gen1(input: &str) -> Vec<Vec<u32>> {
 // *********************
 #[aoc(day1, part1)]
 pub fn part1(input: &Vec<Vec<u32>>) -> u32 {
-    input.iter()
-        .map(|elf|elf.iter()
-            .fold(0,|sum,item|sum+item)).max().unwrap()
+    input
+        .iter()
+        .map(|elf| elf.iter().fold(0, |sum, item| sum + item))
+        .max()
+        .unwrap()
 }
 
 #[aoc(day1, part2)]
 pub fn part2(input: &Vec<Vec<u32>>) -> u32 {
-    let mut calories: Vec<u32> = input.iter()
-        .map(|elf|elf.iter()
-            .fold(0,|sum,item|sum+item)).collect();
+    let mut calories: Vec<u32> = input
+        .iter()
+        .map(|elf| elf.iter().fold(0, |sum, item| sum + item))
+        .collect();
     calories.sort();
     calories.reverse();
     calories.iter().take(3).sum()
-
 }
 
 // *************
@@ -64,8 +66,7 @@ mod tests {
         assert_eq!(part2(&gen1(EX1)), 45000);
     }
 
-const EX1: &'static str =
-r"1000
+    const EX1: &'static str = r"1000
 2000
 3000
 
@@ -79,5 +80,4 @@ r"1000
 9000
 
 10000";
-
 }
