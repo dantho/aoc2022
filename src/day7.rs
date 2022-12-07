@@ -6,12 +6,56 @@
 /// https://docs.rs/regex/1.4.2/regex/#syntax
 // extern crate regex;
 // use self::regex::{Captures, Regex};
+use trees::{tr, Node, Tree};
+use crate::day7::FileSystemNode::*;
+
 // ********************
 // *** Generator(s) ***
 // ********************/
+struct FileSystem {
+    root: trees::Tree<FileSystemNode>,
+}
+
+impl FileSystem {
+    fn new() -> FileSystem {
+        let newfs: FileSystem = FileSystem { root: Tree::<FileSystemNode>::new(Dir("/".to_string())) };
+        newfs
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum TerminalOutput {
+    Command(Command),
+    OutputLine(FileSystemNode)
+}
+
+#[derive(Clone, Debug)]
+pub enum Command {
+    Ls,
+    Cd(String)
+}
+
+#[derive(Clone, Debug)]
+pub enum FileSystemNode {
+    Dir(String),
+    File(String, u64)
+}
+
 #[aoc_generator(day7)]
-pub fn gen1(input: &str) -> String {
-    input.to_string()
+pub fn gen1(input: &str) -> Vec<TerminalOutput> {
+    input.lines()
+    .map(|line| {
+        let mut parts = line.split(' ');
+        match parts.next().unwrap() {
+            "$" => match parts.next().unwrap() {
+                "ls" => TerminalOutput::Command(Command::Ls),
+                "cd" =>  TerminalOutput::Command(Command::Cd(parts.next().unwrap().to_string())),
+                bad => panic!("Unknown command '{}'", bad)
+            }
+            "dir" => TerminalOutput::OutputLine(FileSystemNode::Dir(parts.next().unwrap().to_string())),
+            size => TerminalOutput::OutputLine(FileSystemNode::File(parts.next().unwrap().to_string(), size.parse().unwrap()))
+            }
+        }).collect()
 }
 
 // *********************
@@ -19,13 +63,18 @@ pub fn gen1(input: &str) -> String {
 // *********************
 
 #[aoc(day7, part1)]
-pub fn part1(input: &str) -> usize {
-    find_no_dups(4, input).unwrap()
-}
+pub fn part1(terminal: &[TerminalOutput]) -> usize {
+    println!("{:?}",terminal);
+    // let mut fs = FileSystem::new();
+    // assert!(fs.root.has_no_child());
+    // fs.root.push_back(Tree::new(Dir("a".to_string())));
+    // fs.root.push_back(Tree::new(File("my_first_file".to_string(), 12345)));
+    // println!("{:?}", fs.root);
+    // println!("Size of my_first_file in a is {:?}", {
+    //     let File(_, size) = fs.root.iter().nth(1).unwrap();
+    // });
 
-#[aoc(day7, part2)]
-pub fn part2(input: &str) -> usize {
-    find_no_dups(14, input).unwrap()
+    0
 }
 
 fn find_no_dups(window_size: usize, input: &str) -> Option<usize> {
@@ -56,49 +105,31 @@ mod tests {
 
     #[test]
     fn test_part1_ex1() {
-        assert_eq!(part1(&gen1(EX1)), 7);
-    }
-    #[test]
-    fn test_part1_ex2() {
-        assert_eq!(part1(&gen1(EX2)), 5);
-    }
-    #[test]
-    fn test_part1_ex3() {
-        assert_eq!(part1(&gen1(EX3)), 6);
-    }
-    #[test]
-    fn test_part1_ex4() {
-        assert_eq!(part1(&gen1(EX4)), 10);
-    }
-    #[test]
-    fn test_part1_ex5() {
-        assert_eq!(part1(&gen1(EX5)), 11);
+        assert_eq!(part1(&gen1(EX1)), 95437);
     }
 
-    #[test]
-    fn test_part2_ex1() {
-        assert_eq!(part2(&gen1(EX1)), 19);
-    }
-    #[test]
-    fn test_part2_ex2() {
-        assert_eq!(part2(&gen1(EX2)), 23);
-    }
-    #[test]
-    fn test_part2_ex3() {
-        assert_eq!(part2(&gen1(EX3)), 23);
-    }
-    #[test]
-    fn test_part2_ex4() {
-        assert_eq!(part2(&gen1(EX4)), 29);
-    }
-    #[test]
-    fn test_part2_ex5() {
-        assert_eq!(part2(&gen1(EX5)), 26);
-    }
-
-    const EX1: &'static str = "mjqjpqmgbljsphdztnvjfqwrcgsmlb";
-    const EX2: &'static str = "bvwbjplbgvbhsrlpgdmjqwftvncz";
-    const EX3: &'static str = "nppdvjthqldpwncqszvftbrmjlhg";
-    const EX4: &'static str = "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg";
-    const EX5: &'static str = "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw";
+    const EX1: &'static str = 
+r"$ cd /
+$ ls
+dir a
+14848514 b.txt
+8504156 c.dat
+dir d
+$ cd a
+$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+$ cd e
+$ ls
+584 i
+$ cd ..
+$ cd ..
+$ cd d
+$ ls
+4060174 j
+8033020 d.log
+5626152 d.ext
+7214296 k";
 }
