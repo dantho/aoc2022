@@ -12,7 +12,7 @@ Teradyne private [Leaderboard](https://adventofcode.com/2022/leaderboard/private
 | [4: Camp Cleanup](https://adventofcode.com/2022/day/4) | ⭐⭐ | Parsing input data _could have been done_ in about 10 minutes in VS Code.  Took more than 1 hour in code.  :( |
 | [5: Supply Stacks](https://adventofcode.com/2022/day/5) | ⭐⭐ | Parsing two types of data was a pain, took much more time than algo did.  Crates section of input had to be transposed so _columns_ were vectors of crates instead of rows.  Used pop/push for part 1. Used temporary storage and vec.append() for part 2.  Didn't visualize.  :( |
 | [6: Tuning Trouble](https://adventofcode.com/2022/day/6) | ⭐⭐ | Protocol-aware puzzle -- write start-of-packet marker detection routine |
-| [7: No Space Left On Device](https://adventofcode.com/2022/day/7) |  | Terminal output parsing for directory structure/navigation.  Used Tree crate. |
+| [7: No Space Left On Device](https://adventofcode.com/2022/day/7) | ⭐⭐ | Terminal output parsing for directory structure/navigation.  Tried/failed to use Trees crate.  Tracked directory sizes in HashMap with full path as key. |
 | [8: ](https://adventofcode.com/2022/day/8) |  |  |
 | [9: ](https://adventofcode.com/2022/day/9) |  |  |
 | [10: ](https://adventofcode.com/2022/day/10) |  |  |

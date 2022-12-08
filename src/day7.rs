@@ -83,9 +83,9 @@ pub fn part1(terminal: &[TerminalOutput]) -> u64 {
     for line in terminal {
         match line {
             Command(Ls) => (),
-            Command(Cd(dir)) if &dir[..] == "/" => {traversed.path.clear(); traversed.path.push(dir.to_string());},
             Command(Cd(dir)) if &dir[..] == ".." => {traversed.path.pop();},
             Command(Cd(dir)) => {
+                if dir == "/" {traversed.path.clear();}
                 traversed.path.push(dir.to_string());
                 fs.insert(traversed.to_string(), Vec::new());
             },
@@ -123,9 +123,9 @@ pub fn part2(terminal: &[TerminalOutput]) -> u64 {
     for line in terminal {
         match line {
             Command(Ls) => (),
-            Command(Cd(dir)) if &dir[..] == "/" => {traversed.path.clear(); traversed.path.push(dir.to_string());},
             Command(Cd(dir)) if &dir[..] == ".." => {traversed.path.pop();},
             Command(Cd(dir)) => {
+                if dir == "/" {traversed.path.clear();}
                 traversed.path.push(dir.to_string());
                 fs.insert(traversed.to_string(), Vec::new());
             },
@@ -154,7 +154,7 @@ pub fn part2(terminal: &[TerminalOutput]) -> u64 {
             (dir.to_string(),dir_size)
         }).collect();
     let total_disk_space = 70_000_000;
-    let used_disk_space = dir_sizes["/"];
+    let used_disk_space = dir_sizes["/_"];
     let available = total_disk_space - used_disk_space;
     let target_available = 30_000_000;
     let needed_to_free = target_available - available;
@@ -173,7 +173,12 @@ mod tests {
 
     #[test]
     fn test_part1_ex1() {
-        assert_eq!(part1(&gen1(EX1)), 95437);
+        assert_eq!(part1(&gen1(EX1)), 95_437);
+    }
+
+    #[test]
+    fn test_part2_ex1() {
+        assert_eq!(part2(&gen1(EX1)), 24_933_642);
     }
 
     const EX1: &'static str = 
