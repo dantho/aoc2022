@@ -11,42 +11,108 @@
 // *** Generator(s) ***
 // ********************/
 #[aoc_generator(day8)]
-pub fn gen1(input: &str) -> Vec<Vec<u32>> {
-    let mut elf = Vec::<u32>::new();
-    let mut elves = Vec::new();
-    for line in input.lines() {
-        if line == "" {
-            elves.push(elf);
-            elf = Vec::new();
-        } else {
-            elf.push(line.parse().unwrap());
-        }
-    }
-    elves.push(elf);
-    elves
+pub fn gen1(input: &str) -> Vec<Vec<i32>> {
+    input.lines().map(|row| {
+        row.chars().map(|c| {
+            c.to_digit(10).unwrap() as i32
+        }).collect()
+    }).collect()
 }
 
 // *********************
 // *** Part1 & Part2 ***
 // *********************
 #[aoc(day8, part1)]
-pub fn part1(input: &Vec<Vec<u32>>) -> u32 {
-    input
-        .iter()
-        .map(|elf| elf.iter().fold(0, |sum, item| sum + item))
-        .max()
-        .unwrap()
+pub fn part1(input: &[Vec<i32>]) -> usize {
+    let mut visible: Vec<Vec<bool>> = input.iter()
+        .map(|row| row.iter()
+            .map(|_| false).collect()
+    ).collect();
+    let mut max_vis_vert: Vec<i32>;
+    let mut max_vis_horz: Vec<i32>;
+
+    // search vert & horz in index order
+    max_vis_vert = input.iter().map(|_| -1i32).collect();
+    max_vis_horz = input[0].iter().map(|_| -1i32).collect();
+    
+    for row in 0..input.len() {
+        for col in 0..input[0].len() {
+            let this_tree = input[row][col];
+            visible[row][col] = visible[row][col]
+                || this_tree > max_vis_horz[col]
+                || this_tree > max_vis_vert[row];
+            max_vis_horz[col] = max_vis_horz[col].max(this_tree);
+            max_vis_vert[row] = max_vis_vert[row].max(this_tree);
+        }
+    }
+
+    // search vert & horz in reverse-index order
+    max_vis_vert = input.iter().map(|_| -1i32).collect();
+    max_vis_horz = input[0].iter().map(|_| -1i32).collect();
+    
+    for row in (0..input.len()).rev() {
+        for col in (0..input[0].len()).rev() {
+            let this_tree = input[row][col];
+            visible[row][col] = visible[row][col]
+                || this_tree > max_vis_horz[col]
+                || this_tree > max_vis_vert[row];
+            max_vis_horz[col] = max_vis_horz[col].max(this_tree);
+            max_vis_vert[row] = max_vis_vert[row].max(this_tree);
+        }
+    }
+    #[cfg(test)] input.iter().for_each(|row|println!("{:?}", row));
+    #[cfg(test)] visible.iter().for_each(|row|println!("{:?}", row));
+
+    // How many are visible?
+    visible.iter().map(|col|col.iter()).flatten().filter(|b|**b).count()
 }
 
 #[aoc(day8, part2)]
-pub fn part2(input: &Vec<Vec<u32>>) -> u32 {
-    let mut calories: Vec<u32> = input
-        .iter()
-        .map(|elf| elf.iter().fold(0, |sum, item| sum + item))
-        .collect();
-    calories.sort();
-    calories.reverse();
-    calories.iter().take(3).sum()
+pub fn part2(input: &[Vec<i32>]) -> usize {
+    let mut scenic_score: Vec<Vec<usize>> = input.iter()
+        .map(|row| row.iter()
+            .map(|_| 0).collect()
+    ).collect();
+
+    for row in 0..input.len() {
+        for col in 0..input[0].len() {
+            let this_tree = input[row][col];
+            let mut this_scenic_score = scenic_score[row][col];
+            for view_row in (0..row).rev() {
+                this_scenic_score += 1;
+                if input[view_row][col] >= this_tree {
+                    break;
+                }
+            }
+            for view_row in row+1..input.len() {
+                this_scenic_score += 1;
+                if input[view_row][col] >= this_tree {
+                    break;
+                }
+            }
+            for view_col in (0..col).rev() {
+                this_scenic_score += 1;
+                if input[row][view_col] >= this_tree {
+                    break;
+                }
+            }
+            for view_col in col+1..input.len() {
+                this_scenic_score += 1;
+                if input[row][view_col] >= this_tree {
+                    break;
+                }
+            }
+            scenic_score[row][col] = this_scenic_score;
+        }
+    }
+
+    #[cfg(test)] println!("Input:");
+    #[cfg(test)] input.iter().for_each(|row|println!("{:?}", row));
+    #[cfg(test)] println!("Scenic score:");
+    #[cfg(test)] scenic_score.iter().for_each(|row|println!("{:?}", row));
+
+    // Best scenic score?
+    scenic_score.into_iter().map(|col|col.into_iter()).flatten().max().unwrap()
 }
 
 // *************
@@ -58,26 +124,17 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        assert_eq!(part1(&gen1(EX1)), 24000);
+        assert_eq!(part1(&gen1(EX1)), 21);
     }
 
     #[test]
     fn test_ex1_part2() {
-        assert_eq!(part2(&gen1(EX1)), 45000);
+        assert_eq!(part2(&gen1(EX1)), 8*0);
     }
 
-    const EX1: &'static str = r"1000
-2000
-3000
-
-4000
-
-5000
-6000
-
-7000
-8000
-9000
-
-10000";
+    const EX1: &'static str = r"30373
+25512
+65332
+33549
+35390";
 }
