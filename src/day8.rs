@@ -71,38 +71,48 @@ pub fn part1(input: &[Vec<i32>]) -> usize {
 pub fn part2(input: &[Vec<i32>]) -> usize {
     let mut scenic_score: Vec<Vec<usize>> = input.iter()
         .map(|row| row.iter()
-            .map(|_| 0).collect()
+            .map(|_| 1).collect()
     ).collect();
 
     for row in 0..input.len() {
         for col in 0..input[0].len() {
             let this_tree = input[row][col];
-            let mut this_scenic_score = scenic_score[row][col];
+
+            let mut this_scenic_score = 0;
             for view_row in (0..row).rev() {
                 this_scenic_score += 1;
                 if input[view_row][col] >= this_tree {
                     break;
                 }
             }
+            scenic_score[row][col] *= this_scenic_score;
+
+            let mut this_scenic_score = 0;
             for view_row in row+1..input.len() {
                 this_scenic_score += 1;
                 if input[view_row][col] >= this_tree {
                     break;
                 }
             }
+            scenic_score[row][col] *= this_scenic_score;
+
+            let mut this_scenic_score = 0;
             for view_col in (0..col).rev() {
                 this_scenic_score += 1;
                 if input[row][view_col] >= this_tree {
                     break;
                 }
             }
+            scenic_score[row][col] *= this_scenic_score;
+
+            let mut this_scenic_score = 0;
             for view_col in col+1..input.len() {
                 this_scenic_score += 1;
                 if input[row][view_col] >= this_tree {
                     break;
                 }
             }
-            scenic_score[row][col] = this_scenic_score;
+            scenic_score[row][col] *= this_scenic_score;
         }
     }
 
@@ -129,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_ex1_part2() {
-        assert_eq!(part2(&gen1(EX1)), 8*0);
+        assert_eq!(part2(&gen1(EX1)), 8);
     }
 
     const EX1: &'static str = r"30373
