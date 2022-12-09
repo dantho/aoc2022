@@ -10,16 +10,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'advent-of-code-2021'",
+            "name": "Debug unit tests in library 'advent-of-code-2022'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=advent-of-code-2021"
+                    "--package=advent-of-code-2022"
                 ],
                 "filter": {
-                    "name": "advent-of-code-2021",
+                    "name": "advent-of-code-2022",
                     "kind": "lib"
                 }
             },
@@ -29,15 +29,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'advent-of-code-2021'",
+            "name": "Debug executable 'advent-of-code-2022'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=advent-of-code-2021",
-                    "--package=advent-of-code-2021"
+                    "--bin=advent-of-code-2022",
+                    "--package=advent-of-code-2022"
                 ],
                 "filter": {
-                    "name": "advent-of-code-2021",
+                    "name": "advent-of-code-2022",
                     "kind": "bin"
                 }
             },
@@ -47,16 +47,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'advent-of-code-2021'",
+            "name": "Debug unit tests in executable 'advent-of-code-2022'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=advent-of-code-2021",
-                    "--package=advent-of-code-2021"
+                    "--bin=advent-of-code-2022",
+                    "--package=advent-of-code-2022"
                 ],
                 "filter": {
-                    "name": "advent-of-code-2021",
+                    "name": "advent-of-code-2022",
                     "kind": "bin"
                 }
             },
