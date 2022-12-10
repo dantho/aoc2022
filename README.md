@@ -4,7 +4,7 @@
 
 Teradyne private [Leaderboard](https://adventofcode.com/2022/leaderboard/private/view/380786) for [adventofcode.com/2022](https://adventofcode.com/2022)
 
-| Day | Stars | Comment |
+| Day | Stars | Comments (**SPOILER ALERT!**) |
 |---|:-:|-|
 | [1: Calorie Counting](https://adventofcode.com/2022/day/1) | ⭐⭐ | Sum Calories by elf, find max elf.  Add sorting to find sum of top 3 elves. |
 | [2: Rock Paper Scissors](https://adventofcode.com/2022/day/2) | ⭐⭐ | Circular buffer for game logic |
