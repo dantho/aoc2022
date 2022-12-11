@@ -16,7 +16,7 @@ Teradyne private [Leaderboard](https://adventofcode.com/2022/leaderboard/private
 | [8: Treetop Tree House](https://adventofcode.com/2022/day/8) | ⭐⭐ | Simple elevation gradient algos in 4 directions |
 | [9: Rope Bridge](https://adventofcode.com/2022/day/9) | ⭐⭐ | Weird rope knot dynamics -- tried/failed to visualize with animation via CrossTerm::Cursor::MoveTo.  :( |
 | [10: Cathode-Ray Tube](https://adventofcode.com/2022/day/10) | ⭐⭐ | *Very* simple ALU with 2 op codes. Part 2 prints pixels for the human to read. |
-| [11: ](https://adventofcode.com/2022/day/11) |  |  |
+| [11: Monkey in the Middle](https://adventofcode.com/2022/day/11) | ⭐⭐ | Difficult puzzle for 3 reasons: 1) Input didn't lend itself to parsing.  Instead, I maniputlated input text into data structure syntax; 2) One piece of data was a _function_ -- a lambda function; 3) Had to figure out how to "limit" intermediates, without further instructions, just "figure it out". |
 | [12: ](https://adventofcode.com/2022/day/12) |  |  |
 | [13: ](https://adventofcode.com/2022/day/13) |  |  |
 | [14: ](https://adventofcode.com/2022/day/14) |  |  |

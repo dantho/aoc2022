@@ -187,7 +187,7 @@ mod tests {
 
     #[test]
     fn test_part2_ex2() {
-        assert_eq!(part2(&gen1(EX2)), 999);
+        assert_eq!(part2(&gen1(EX2)), 0);
     }
 
 const EX1: &'static str =
