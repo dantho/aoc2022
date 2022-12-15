@@ -8,7 +8,7 @@
 // use self::regex::{Captures, Regex};
 
 use std::fmt::Display;
-
+use crate::day14::Cave::*;
 
 #[derive(Copy,Clone,Eq,PartialEq,Debug)]
 pub enum Cave {
@@ -18,28 +18,30 @@ pub enum Cave {
     Sand,
 }
 
+#[derive(Clone)]
 pub struct CaveSystem {
     map: Vec<Vec<Cave>>,
-    minx: usize,
+    start: (usize,usize), 
+    xmin: usize,
 }
 
 impl From<Cave> for char {
     fn from(cave: Cave) -> Self {
         match cave {
-            Cave::Start => '+',
-            Cave::Air =>   '.',
-            Cave::Rock =>  '#',
-            Cave::Sand =>  'o',
+            Start => '+',
+            Air =>   '.',
+            Rock =>  '#',
+            Sand =>  'o',
         }
     }
 }
 impl Display for Cave {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Cave::Start => write!(f,"+"),
-            Cave::Air => write!(f,"."),
-            Cave::Rock => write!(f,"#"),
-            Cave::Sand => write!(f,"o"),
+            Start => write!(f,"+"),
+            Air => write!(f,"."),
+            Rock => write!(f,"#"),
+            Sand => write!(f,"o"),
         }
     }
 }
@@ -49,7 +51,7 @@ impl Display for CaveSystem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for y in 0..self.map.len() {
             let mut line = String::new();
-            let left = self.minx.max(1)-1;
+            let left = self.xmin.max(1)-1;
             for x in left..self.map[0].len() {
                 line.push(char::from(self.map[y][x]));
             }
@@ -73,17 +75,18 @@ pub fn gen1(input: &str) -> CaveSystem {
                 .nth(0).unwrap()
             }).collect::<Vec<_>>())
         .collect::<Vec<_>>();
-    let (minx, maxx, maxy) = terrain_coords.iter()
+    let (xmin, mut xmax, mut ymax) = terrain_coords.iter()
         .map(|v|v.iter())
         .flatten()
         .fold((usize::MAX,0,0), |(mx,xx,yy),(x,y)| (mx.min(*x), xx.max(*x), yy.max(*y)));
-    assert!(maxx >= STARTX);
-    let blank_row = vec![Cave::Air;maxx+2];
+    assert!(xmax >= STARTX);
+    xmax += 2; // Algo needs extra AIR at right edge (hopefully left edge is OK)
+    ymax += 1; // just for looks
+    let blank_row = vec![Air;xmax+1]; // Algo needs extra AIR at right edge (hopefully left edge is OK)
     let mut cave_system = Vec::new();
-    for _y in 0..maxy+2 {
+    for _y in 0..=ymax {
         cave_system.push(blank_row.clone());
     }
-    dbg!(&terrain_coords);
     let segments = terrain_coords.iter()
         .map(|sequence| sequence.iter()
             .zip(sequence.iter().skip(1))
@@ -93,22 +96,63 @@ pub fn gen1(input: &str) -> CaveSystem {
         for ((xx,yy),(xxx,yyy)) in v {
             for y in *yy.min(yyy)..=*yy.max(yyy) {
                 for x in *xx.min(xxx)..=*xx.max(xxx) {
-                    cave_system[y][x] = Cave::Rock;
+                    cave_system[y][x] = Rock;
                 }
             }
         }
     }
-    cave_system[0][STARTX] = Cave::Start;
-    CaveSystem { map: cave_system, minx}
+    cave_system[0][STARTX] = Start;
+    CaveSystem { map: cave_system, xmin, start: (STARTX, 0)}
 }
 
 // *********************
 // *** Part1 & Part2 ***
 // *********************
 #[aoc(day14, part1)]
-pub fn part1(input: &CaveSystem) -> u32 {
-    println!("{}",input);
-    0
+pub fn part1(caves: &CaveSystem) -> usize {
+    println!("{}",caves);
+    let mut caves = caves.clone();
+    let ymax = caves.map.len()-1;
+    let _xmax = caves.map[0].len()-1;
+    let mut grain = caves.start;
+     
+    #[cfg(test)]
+    let mut timeout = 1_000;
+    #[cfg(not (test))]
+    let mut timeout = 100_000;
+    let mut still_filling = true;
+    while still_filling {
+        let mut last_loc = (usize::MAX, usize::MAX);
+        while grain != last_loc { // Not at rest?
+            last_loc = grain;
+            if grain.1+1 >= ymax { // fall into the abyss?
+                caves.map[grain.1][grain.0] = Air;
+                still_filling = false;
+                break; 
+            }
+            let down = (grain.0, grain.1+1);
+            let leftd = (grain.0-1, grain.1+1);
+            let rightd = (grain.0+1, grain.1+1);
+            caves.map[grain.1][grain.0] = Air;
+            grain = match [caves.map[down.1][down.0], caves.map[leftd.1][leftd.0], caves.map[rightd.1][rightd.0]] {
+                [Air, _, _] => down,
+                [_, Air, _] => leftd,
+                [_, _, Air] => rightd,
+                _ => grain, // at rest
+            };
+            caves.map[grain.1][grain.0] = Sand;
+            timeout -= 1;
+            if timeout <= 0 {break;}
+        }
+        grain = caves.start;
+        if timeout <= 0 {break;}
+    }
+    println!("{}",caves);
+    caves.map.iter()
+    .map(|v|v.iter()
+        .filter(|item|item==&&Sand))
+    .flatten()
+    .count()
 }
 
 // *************
@@ -120,7 +164,7 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        assert_eq!(part1(&gen1(EX1)), 999);
+        assert_eq!(part1(&gen1(EX1)), 24);
     }
 
     const EX1: &'static str = r"498,4 -> 498,6 -> 496,6
