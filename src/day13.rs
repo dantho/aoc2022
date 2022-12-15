@@ -28,9 +28,9 @@ impl PartialEq for ListOrVal {
 impl PartialOrd for ListOrVal {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
-            (Val(lhs), Val(rhs)) => Some(lhs.cmp(rhs)),
-            (Val(lhs), rhs) => Some(dbg!(ListOrVal::from(lhs)).cmp(rhs)),
-            (lhs, Val(rhs)) => Some(lhs.cmp(&ListOrVal::from(rhs))),
+            (Val(lhs), Val(rhs)) => lhs.partial_cmp(rhs),
+            (Val(lhs), rhs) => ListOrVal::from(lhs).partial_cmp(rhs),
+            (lhs, Val(rhs)) => lhs.partial_cmp(&ListOrVal::from(rhs)),
             (List(lhs), List(rhs)) => {
                 let res = lhs.iter().zip(rhs).fold(Some(Equal), |acc, (lhs,rhs)| if acc == Some(Equal) {
                     lhs.partial_cmp(rhs)
@@ -38,8 +38,10 @@ impl PartialOrd for ListOrVal {
                     acc
                 });
                 if res == Some(Equal) {
-                    Some(lhs.len().cmp(&rhs.len()))
-                } else {res}
+                    lhs.len().partial_cmp(&rhs.len())
+                } else {
+                    res
+                }
             },
         }
     }
