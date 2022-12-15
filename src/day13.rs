@@ -7,13 +7,47 @@
 // extern crate regex;
 // use self::regex::{Captures, Regex};
 
-use std::str::FromStr;
+use std::{str::FromStr, cmp::Ordering::{self, Greater, Less, Equal}};
 use crate::day13::ListOrVal::*;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, Ord)]
 pub enum ListOrVal {
     Val(u8),
     List(Vec<Box<ListOrVal>>) // Embedded lists must be pointers, not actual lists, to avoid infinite size    
+}
+impl PartialEq for ListOrVal {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Val(lhs), Self::Val(rhs)) => lhs == rhs,
+            (Self::Val(lhs), rhs) => ListOrVal::from(lhs) == *rhs,
+            (lhs, Self::Val(rhs)) => *lhs == ListOrVal::from(rhs),
+            (Self::List(lhs), Self::List(rhs)) => lhs == rhs,
+        }
+    }
+}
+impl PartialOrd for ListOrVal {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (Val(lhs), Val(rhs)) => Some(lhs.cmp(rhs)),
+            (Val(lhs), rhs) => Some(dbg!(ListOrVal::from(lhs)).cmp(rhs)),
+            (lhs, Val(rhs)) => Some(lhs.cmp(&ListOrVal::from(rhs))),
+            (List(lhs), List(rhs)) => {
+                let res = lhs.iter().zip(rhs).fold(Some(Equal), |acc, (lhs,rhs)| if acc == Some(Equal) {
+                    lhs.partial_cmp(rhs)
+                } else {
+                    acc
+                });
+                if res == Some(Equal) {
+                    Some(lhs.len().cmp(&rhs.len()))
+                } else {res}
+            },
+        }
+    }
+}
+impl From<&u8> for ListOrVal {
+    fn from(v: &u8) -> Self {
+        List(vec![Box::new(Val(*v))])
+    }
 }
 impl FromStr for ListOrVal {
     type Err = String;
@@ -90,9 +124,13 @@ pub fn gen1(input: &str) -> Vec<ListOrVal> {
 // *** Part1 & Part2 ***
 // *********************
 #[aoc(day13, part1)]
-pub fn part1(input: &[ListOrVal]) -> u32 {
-    dbg!(input);
-    0
+pub fn part1(input: &[ListOrVal]) -> usize {
+    input.iter().step_by(2)
+        .zip(input.iter().skip(1).step_by(2))
+        .enumerate()
+        .filter(|(_,(list1, list2))| list1.partial_cmp(list2) == Some(Less))
+        .map(|(ndx, _)|dbg!(ndx+1))
+        .sum()
 }
 
 // *************
@@ -104,7 +142,7 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        assert_eq!(part1(&gen1(EX1)), 999);
+        assert_eq!(part1(&gen1(EX1)), 13);
     }
 
     // #[test]
@@ -112,7 +150,8 @@ mod tests {
     //     assert_eq!(part2(&gen1(EX1)), 45000);
     // }
 
-    const EX1: &'static str = r"[1,1,3,1,1]
+    const EX1: &'static str =
+r"[1,1,3,1,1]
 [1,1,5,1,1]
 
 [[1],[2,3,4]]
