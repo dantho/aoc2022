@@ -10,7 +10,7 @@
 use std::{str::FromStr, cmp::Ordering::{self, Greater, Less, Equal}};
 use crate::day13::ListOrVal::*;
 
-#[derive(Debug, Eq, Ord)]
+#[derive(Clone, Debug, Eq, Ord)]
 pub enum ListOrVal {
     Val(u8),
     List(Vec<Box<ListOrVal>>) // Embedded lists must be pointers, not actual lists, to avoid infinite size    
@@ -131,8 +131,22 @@ pub fn part1(input: &[ListOrVal]) -> usize {
         .zip(input.iter().skip(1).step_by(2))
         .enumerate()
         .filter(|(_,(list1, list2))| list1.partial_cmp(list2) == Some(Less))
-        .map(|(ndx, _)|dbg!(ndx+1))
+        .map(|(ndx, _)|ndx+1)
         .sum()
+}
+#[aoc(day13, part2)]
+pub fn part2(input: &[ListOrVal]) -> usize {
+    let mut input = input.to_vec();
+    let divider1 = List(vec![Box::new(List(vec![Box::new(Val(2))]))]);
+    let divider2 = List(vec![Box::new(List(vec![Box::new(Val(6))]))]);
+    input.push(divider1.clone());
+    input.push(divider2.clone());
+    input.sort();
+    input.iter()
+        .enumerate()
+        .filter(|(_, list)| list == &&divider1 || list == &&divider2)
+        .map(|(ndx, _)| ndx+1)
+        .product()
 }
 
 // *************
@@ -147,10 +161,10 @@ mod tests {
         assert_eq!(part1(&gen1(EX1)), 13);
     }
 
-    // #[test]
-    // fn test_ex1_part2() {
-    //     assert_eq!(part2(&gen1(EX1)), 45000);
-    // }
+    #[test]
+    fn test_ex1_part2() {
+        assert_eq!(part2(&gen1(EX1)), 140);
+    }
 
     const EX1: &'static str =
 r"[1,1,3,1,1]
