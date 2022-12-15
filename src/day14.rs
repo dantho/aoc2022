@@ -75,14 +75,18 @@ pub fn gen1(input: &str) -> CaveSystem {
                 .nth(0).unwrap()
             }).collect::<Vec<_>>())
         .collect::<Vec<_>>();
-    let (xmin, mut xmax, mut ymax) = terrain_coords.iter()
+    let mut ymax = terrain_coords.iter()
         .map(|v|v.iter())
         .flatten()
-        .fold((usize::MAX,0,0), |(mx,xx,yy),(x,y)| (mx.min(*x), xx.max(*x), yy.max(*y)));
+        .fold(0, |yy,(_,y)| yy.max(*y));
+    ymax += 1; // single blank row at bottom
+    let (xmin, xmax) = terrain_coords.iter()
+        .map(|v|v.iter())
+        .flatten()
+        .fold((usize::MAX,0), |(mx,xx),(x,y)| (mx.min(*x), xx.max(*x+*y)));
     assert!(xmax >= STARTX);
-    xmax += 2; // Algo needs extra AIR at right edge (hopefully left edge is OK)
-    ymax += 1; // just for looks
-    let blank_row = vec![Air;xmax+1]; // Algo needs extra AIR at right edge (hopefully left edge is OK)
+        // make horizonal room for a diagonal pile
+    let blank_row = vec![Air;xmax+1];
     let mut cave_system = Vec::new();
     for _y in 0..=ymax {
         cave_system.push(blank_row.clone());
@@ -111,21 +115,45 @@ pub fn gen1(input: &str) -> CaveSystem {
 #[aoc(day14, part1)]
 pub fn part1(caves: &CaveSystem) -> usize {
     println!("{}",caves);
+    let caves = let_sand_fall(caves.clone());
+    println!("{}",caves);
+    caves.map.iter()
+    .map(|v|v.iter()
+        .filter(|item|item==&&Sand))
+    .flatten()
+    .count()
+}
+
+#[aoc(day14, part2)]
+pub fn part2(caves: &CaveSystem) -> usize {
+    println!("{}",caves);
     let mut caves = caves.clone();
+    let row_of_rock = caves.map[0].iter().map(|_|Rock).collect::<Vec<_>>();
+    caves.map.push(row_of_rock);
+    let caves = let_sand_fall(caves);
+    println!("{}",caves);
+    caves.map.iter()
+    .map(|v|v.iter()
+        .filter(|item|item==&&Sand))
+    .flatten()
+    .count()
+}
+
+fn let_sand_fall(mut caves: CaveSystem) -> CaveSystem {
     let ymax = caves.map.len()-1;
     let _xmax = caves.map[0].len()-1;
     let mut grain = caves.start;
-     
+
     #[cfg(test)]
     let mut timeout = 1_000;
     #[cfg(not (test))]
-    let mut timeout = 100_000;
+    let mut timeout = 10_000_000;
     let mut still_filling = true;
     while still_filling {
         let mut last_loc = (usize::MAX, usize::MAX);
         while grain != last_loc { // Not at rest?
             last_loc = grain;
-            if grain.1+1 >= ymax { // fall into the abyss?
+            if grain.1+1 > ymax { // falling into the abyss?
                 caves.map[grain.1][grain.0] = Air;
                 still_filling = false;
                 break; 
@@ -147,14 +175,8 @@ pub fn part1(caves: &CaveSystem) -> usize {
         grain = caves.start;
         if timeout <= 0 {break;}
     }
-    println!("{}",caves);
-    caves.map.iter()
-    .map(|v|v.iter()
-        .filter(|item|item==&&Sand))
-    .flatten()
-    .count()
+    caves
 }
-
 // *************
 // *** Tests ***
 // *************
@@ -165,6 +187,11 @@ mod tests {
     #[test]
     fn test_ex1_part1() {
         assert_eq!(part1(&gen1(EX1)), 24);
+    }
+
+    #[test]
+    fn test_ex1_part2() {
+        assert_eq!(part2(&gen1(EX1)), 93);
     }
 
     const EX1: &'static str = r"498,4 -> 498,6 -> 496,6
