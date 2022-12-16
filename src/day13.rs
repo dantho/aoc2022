@@ -1,3 +1,4 @@
+use crate::day13::ListOrVal::*;
 /// https://adventofcode.com/2022/day/13
 /// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786
 /// TER: https://adventofcode.com/2022/leaderboard/private/view/951754
@@ -6,14 +7,15 @@
 /// https://docs.rs/regex/1.4.2/regex/#syntax
 // extern crate regex;
 // use self::regex::{Captures, Regex};
-
-use std::{str::FromStr, cmp::Ordering::{self, Greater, Less, Equal}};
-use crate::day13::ListOrVal::*;
+use std::{
+    cmp::Ordering::{self, Equal, Greater, Less},
+    str::FromStr,
+};
 
 #[derive(Clone, Debug, Eq, Ord)]
 pub enum ListOrVal {
     Val(u8),
-    List(Vec<Box<ListOrVal>>) // Embedded lists must be pointers, not actual lists, to avoid infinite size    
+    List(Vec<Box<ListOrVal>>), // Embedded lists must be pointers, not actual lists, to avoid infinite size
 }
 impl PartialEq for ListOrVal {
     fn eq(&self, other: &Self) -> bool {
@@ -32,17 +34,19 @@ impl PartialOrd for ListOrVal {
             (Val(lhs), rhs) => ListOrVal::from(lhs).partial_cmp(rhs),
             (lhs, Val(rhs)) => lhs.partial_cmp(&ListOrVal::from(rhs)),
             (List(lhs), List(rhs)) => {
-                let res = lhs.iter().zip(rhs).fold(Some(Equal), |acc, (lhs,rhs)| if acc == Some(Equal) {
-                    lhs.partial_cmp(rhs)
-                } else {
-                    acc
+                let res = lhs.iter().zip(rhs).fold(Some(Equal), |acc, (lhs, rhs)| {
+                    if acc == Some(Equal) {
+                        lhs.partial_cmp(rhs)
+                    } else {
+                        acc
+                    }
                 });
                 if res == Some(Equal) {
                     lhs.len().partial_cmp(&rhs.len())
                 } else {
                     res
                 }
-            },
+            }
         }
     }
 }
@@ -60,53 +64,71 @@ impl FromStr for ListOrVal {
         // The chars in the middle comprise the list of Vals or sub-lists.
         // if another '[' is found, find, then recurse on string between '[' and matching ']'
         if '[' == chars[0] {
-            if ']' == chars[len-1] {
+            if ']' == chars[len - 1] {
                 let mut nested_list = Vec::new();
                 let mut ndx = 1;
-                while ndx <= len-2 {
+                while ndx <= len - 2 {
                     match chars[ndx] {
                         '[' => {
                             // We're starting a new sublist, find ending postion, recurse to process, then push
                             let mut depth = 0u8;
                             let mut matched = false;
-                            for endx in ndx+1..len-1 {
+                            for endx in ndx + 1..len - 1 {
                                 match (chars[endx], depth) {
                                     (']', 0) => {
-                                        let sublist = ListOrVal::from_str(&chars[ndx..=endx].iter().collect::<String>()).unwrap();
+                                        let sublist = ListOrVal::from_str(
+                                            &chars[ndx..=endx].iter().collect::<String>(),
+                                        )
+                                        .unwrap();
                                         nested_list.push(Box::new(sublist));
                                         matched = true;
                                         ndx = endx;
-                                    },
+                                    }
                                     (']', _) => depth -= 1,
                                     ('[', _) => depth += 1,
                                     _ => (),
                                 }
                             }
                             if !matched {
-                                return Err(format!("Unmatched '[' in \"{}\" at position {}", str_to_parse, ndx));
+                                return Err(format!(
+                                    "Unmatched '[' in \"{}\" at position {}",
+                                    str_to_parse, ndx
+                                ));
                             }
-                        },
-                        n if n.is_numeric() => { // We found a Val, parse it, push it
+                        }
+                        n if n.is_numeric() => {
+                            // We found a Val, parse it, push it
                             let mut num = n.to_string();
                             // Peek ahead to next char
-                            while chars[ndx+1].is_numeric() {
-                                num.push(chars[ndx+1]);
+                            while chars[ndx + 1].is_numeric() {
+                                num.push(chars[ndx + 1]);
                                 ndx += 1;
                             }
                             let val: u8 = num.parse().unwrap();
                             nested_list.push(Box::new(Val(val)));
-                        },
+                        }
                         ',' => (),
-                        _ => return Err(format!("Unexpected char in \"{}\" at position {}", str_to_parse, ndx))
+                        _ => {
+                            return Err(format!(
+                                "Unexpected char in \"{}\" at position {}",
+                                str_to_parse, ndx
+                            ))
+                        }
                     }
                     ndx += 1;
                 }
                 Ok(List(nested_list))
             } else {
-                Err(format!("Expected closing List char ']' at end of \"{}\"", str_to_parse))
+                Err(format!(
+                    "Expected closing List char ']' at end of \"{}\"",
+                    str_to_parse
+                ))
             }
         } else {
-            Err(format!("Expected openning List char '[' at start of \"{}\"", str_to_parse))
+            Err(format!(
+                "Expected openning List char '[' at start of \"{}\"",
+                str_to_parse
+            ))
         }
     }
 }
@@ -115,11 +137,12 @@ impl FromStr for ListOrVal {
 // ********************/
 #[aoc_generator(day13)]
 pub fn gen1(input: &str) -> Vec<ListOrVal> {
-    input.lines()
-        .filter(|line|!line.trim().is_empty())
-        .map(|line|ListOrVal::from_str(line))
+    input
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| ListOrVal::from_str(line))
         .flatten()
-        .collect()    
+        .collect()
 }
 
 // *********************
@@ -127,11 +150,13 @@ pub fn gen1(input: &str) -> Vec<ListOrVal> {
 // *********************
 #[aoc(day13, part1)]
 pub fn part1(input: &[ListOrVal]) -> usize {
-    input.iter().step_by(2)
+    input
+        .iter()
+        .step_by(2)
         .zip(input.iter().skip(1).step_by(2))
         .enumerate()
-        .filter(|(_,(list1, list2))| list1.partial_cmp(list2) == Some(Less))
-        .map(|(ndx, _)|ndx+1)
+        .filter(|(_, (list1, list2))| list1.partial_cmp(list2) == Some(Less))
+        .map(|(ndx, _)| ndx + 1)
         .sum()
 }
 #[aoc(day13, part2)]
@@ -142,10 +167,11 @@ pub fn part2(input: &[ListOrVal]) -> usize {
     input.push(divider1.clone());
     input.push(divider2.clone());
     input.sort();
-    input.iter()
+    input
+        .iter()
         .enumerate()
         .filter(|(_, list)| list == &&divider1 || list == &&divider2)
-        .map(|(ndx, _)| ndx+1)
+        .map(|(ndx, _)| ndx + 1)
         .product()
 }
 
@@ -166,8 +192,7 @@ mod tests {
         assert_eq!(part2(&gen1(EX1)), 140);
     }
 
-    const EX1: &'static str =
-r"[1,1,3,1,1]
+    const EX1: &'static str = r"[1,1,3,1,1]
 [1,1,5,1,1]
 
 [[1],[2,3,4]]

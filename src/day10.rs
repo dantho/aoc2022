@@ -2,7 +2,11 @@
 /// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786
 /// TER: https://adventofcode.com/2022/leaderboard/private/view/951754
 use self::Op::*;
-use std::{convert::{From, TryInto}, fmt::Display, fmt::Formatter};
+use std::{
+    convert::{From, TryInto},
+    fmt::Display,
+    fmt::Formatter,
+};
 /*
 Start by figuring out the signal being sent by the CPU. The CPU has a single register, X, which starts with the value 1. It supports only two instructions:
 
@@ -24,7 +28,7 @@ pub fn gen1(input: &str) -> String {
 pub fn part1(input: &str) -> isize {
     let mut alu = ALU::load_program(&input);
     alu.eval();
-    alu.log.iter().map(|(_,v)|v).sum()
+    alu.log.iter().map(|(_, v)| v).sum()
 }
 
 #[aoc(day10, part2)]
@@ -38,7 +42,7 @@ pub fn part2(input: &str) -> isize {
 // ***************
 // *** The ALU ***
 // ***************
-#[derive(Copy,Clone)]
+#[derive(Copy, Clone)]
 enum Op {
     Noop,
     Addx(isize),
@@ -54,7 +58,7 @@ impl From<&str> for Op {
             "addx" => {
                 let val = val_token_maybe.unwrap().parse().unwrap();
                 Addx(val)
-            },
+            }
             bad => panic!("Unrecognized OpCode: '{}'", bad),
         }
     }
@@ -65,16 +69,16 @@ const PIX_COUNT: usize = 240;
 const PIX_WIDTH: usize = 40;
 struct ALU {
     clock: usize,
-    regs: [isize;REG_COUNT],  // x
+    regs: [isize; REG_COUNT], // x
     program: Vec<Op>,
-    log: Vec<(usize,isize)>,
+    log: Vec<(usize, isize)>,
     pixels: [bool; PIX_COUNT],
 }
 
 impl ALU {
     fn reboot(&mut self) {
         self.clock = 0;
-        self.regs = [1;REG_COUNT];
+        self.regs = [1; REG_COUNT];
         self.log.clear();
         self.pixels = [false; PIX_COUNT];
         // leave program intact
@@ -89,11 +93,13 @@ impl ALU {
         assert!(clk_ndx < PIX_COUNT);
         let pos: isize = (clk_ndx % PIX_WIDTH).try_into().unwrap();
         let x = self.regs[0];
-        self.pixels[clk_ndx] = pos >= x-1 && pos <= x+1;
+        self.pixels[clk_ndx] = pos >= x - 1 && pos <= x + 1;
     }
 
     fn clock_tic_n(&mut self, n: usize) {
-        for _i in 0..n {self.clock_tic()};
+        for _i in 0..n {
+            self.clock_tic()
+        }
     }
 
     fn monitor(&mut self) {
@@ -104,16 +110,16 @@ impl ALU {
         }
     }
 
-    pub fn eval(&mut self) -> [isize;REG_COUNT] {
+    pub fn eval(&mut self) -> [isize; REG_COUNT] {
         for instruction in self.program.clone() {
             match instruction {
                 Noop => {
                     self.clock_tic();
-                },
+                }
                 Addx(v) => {
                     self.clock_tic_n(2);
                     self.regs[0] += v;
-                },
+                }
             };
         }
         self.regs // Regs array is return value at end
@@ -121,15 +127,21 @@ impl ALU {
 
     fn load_program(program: &str) -> Self {
         let clock = 999; // See reboot for proper initialization
-        let regs = [999;REG_COUNT]; // See reboot for proper initialization
+        let regs = [999; REG_COUNT]; // See reboot for proper initialization
         let log = Vec::new();
-        let pixels = [false;PIX_COUNT];
-        let program = program.lines()
-        .filter(|line|!line.is_empty())
-        .map(|line|{
-                Op::from(line)
-            }).collect::<Vec<Op>>();
-        let mut new_alu = ALU {clock, regs, program, pixels, log};
+        let pixels = [false; PIX_COUNT];
+        let program = program
+            .lines()
+            .filter(|line| !line.is_empty())
+            .map(|line| Op::from(line))
+            .collect::<Vec<Op>>();
+        let mut new_alu = ALU {
+            clock,
+            regs,
+            program,
+            pixels,
+            log,
+        };
         new_alu.reboot();
         new_alu
     }
@@ -139,7 +151,7 @@ impl ALU {
             if p % PIX_WIDTH == 0 {
                 out_string.push('\n');
             }
-            out_string.push(if self.pixels[p] {'#'} else {'.'});
+            out_string.push(if self.pixels[p] { '#' } else { '.' });
         }
         out_string
     }
@@ -147,7 +159,7 @@ impl ALU {
 
 impl Display for ALU {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f,"{}", self.pixels_str())?;
+        write!(f, "{}", self.pixels_str())?;
         Ok(())
     }
 }
@@ -177,12 +189,12 @@ mod tests {
         let mut alu = ALU::load_program(EX2);
         alu.eval();
         let mut log = alu.log.iter();
-        assert_eq!(log.next(),Some(&(20, 420)));
-        assert_eq!(log.next(),Some(&(60, 1140)));
-        assert_eq!(log.next(),Some(&(100, 1800)));
-        assert_eq!(log.next(),Some(&(140, 2940)));
-        assert_eq!(log.next(),Some(&(180, 2880)));
-        assert_eq!(log.next(),Some(&(220, 3960)));
+        assert_eq!(log.next(), Some(&(20, 420)));
+        assert_eq!(log.next(), Some(&(60, 1140)));
+        assert_eq!(log.next(), Some(&(100, 1800)));
+        assert_eq!(log.next(), Some(&(140, 2940)));
+        assert_eq!(log.next(), Some(&(180, 2880)));
+        assert_eq!(log.next(), Some(&(220, 3960)));
     }
 
     #[test]
@@ -190,13 +202,11 @@ mod tests {
         assert_eq!(part2(&gen1(EX2)), 0);
     }
 
-const EX1: &'static str =
-r"noop
+    const EX1: &'static str = r"noop
 addx 3
 addx -5";
 
-const EX2: &'static str =
-r"addx 15
+    const EX2: &'static str = r"addx 15
 addx -11
 addx 6
 addx -3
@@ -342,5 +352,4 @@ addx -11
 noop
 noop
 noop";
-
 }

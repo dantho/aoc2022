@@ -7,15 +7,15 @@
 // extern crate regex;
 // use self::regex::{Captures, Regex};
 use crate::day9::Dir::*;
-use std::collections::HashSet;
 use std::cmp::Ordering::*;
+use std::collections::HashSet;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Dir {
     Up,
     Down,
     Left,
-    Right
+    Right,
 }
 
 impl From<&str> for Dir {
@@ -25,7 +25,7 @@ impl From<&str> for Dir {
             "D" => Down,
             "L" => Left,
             "R" => Right,
-            bad => panic!("Bad input for Dir {}", bad)
+            bad => panic!("Bad input for Dir {}", bad),
         }
     }
 }
@@ -34,12 +34,15 @@ impl From<&str> for Dir {
 // ********************/
 #[aoc_generator(day9)]
 pub fn gen1(input: &str) -> Vec<(Dir, isize)> {
-    input.lines().map(|line| {
-        let mut parts = line.split(' ');
-        let dir: Dir = parts.next().unwrap().into();
-        let dist = parts.next().unwrap().parse().unwrap();
-        (dir,dist)
-        }).collect::<Vec<(_, _)>>()
+    input
+        .lines()
+        .map(|line| {
+            let mut parts = line.split(' ');
+            let dir: Dir = parts.next().unwrap().into();
+            let dist = parts.next().unwrap().parse().unwrap();
+            (dir, dist)
+        })
+        .collect::<Vec<(_, _)>>()
 }
 
 // *********************
@@ -47,17 +50,19 @@ pub fn gen1(input: &str) -> Vec<(Dir, isize)> {
 // *********************
 #[aoc(day9, part1)]
 pub fn part1(input: &[(Dir, isize)]) -> usize {
-    #[cfg(test)] println!("-- Starting Part 1 --");
-    let mut head = (0,0);
-    let mut tail = (0,0);
-    let mut tail_history: HashSet::<(isize, isize)> = HashSet::new();
+    #[cfg(test)]
+    println!("-- Starting Part 1 --");
+    let mut head = (0, 0);
+    let mut tail = (0, 0);
+    let mut tail_history: HashSet<(isize, isize)> = HashSet::new();
     tail_history.insert(tail);
     for (dir, dist) in input.into_iter() {
         for _i in 0..*dist {
             head = move_head(head, *dir);
             tail = follow(head, tail);
             tail_history.insert(tail);
-            #[cfg(test)] println!("{:?} {:?}", head, tail);
+            #[cfg(test)]
+            println!("{:?} {:?}", head, tail);
         }
     }
 
@@ -66,22 +71,23 @@ pub fn part1(input: &[(Dir, isize)]) -> usize {
 
 #[aoc(day9, part2)]
 pub fn part2(input: &[(Dir, isize)]) -> usize {
-    #[cfg(test)] println!("-- Starting Part 2 --");
-    let mut head = (0,0);
-    let mut tails = [(0,0);9];
-    let mut tail_history: HashSet::<(isize, isize)> = HashSet::new();
+    #[cfg(test)]
+    println!("-- Starting Part 2 --");
+    let mut head = (0, 0);
+    let mut tails = [(0, 0); 9];
+    let mut tail_history: HashSet<(isize, isize)> = HashSet::new();
     tail_history.insert(tails[8]);
 
     for (dir, dist) in input.into_iter() {
         for _i in 0..*dist {
             head = move_head(head, *dir);
             for t in 0..9 {
-                tails[t] = follow(if t==0 {head} else {tails[t-1]}, tails[t]);
+                tails[t] = follow(if t == 0 { head } else { tails[t - 1] }, tails[t]);
             }
             tail_history.insert(tails[8]);
-            
         }
-        #[cfg(test)] println!("{:?} {:?}", head, tails[8]);
+        #[cfg(test)]
+        println!("{:?} {:?}", head, tails[8]);
     }
 
     tail_history.len()
@@ -89,33 +95,37 @@ pub fn part2(input: &[(Dir, isize)]) -> usize {
 
 fn move_head(head: (isize, isize), dir: Dir) -> (isize, isize) {
     match dir {
-        Up => (head.0, head.1+1),
-        Down => (head.0, head.1-1),
-        Right => (head.0+1, head.1),
-        Left => (head.0-1, head.1),
+        Up => (head.0, head.1 + 1),
+        Down => (head.0, head.1 - 1),
+        Right => (head.0 + 1, head.1),
+        Left => (head.0 - 1, head.1),
     }
 }
 
 fn follow(head: (isize, isize), tail: (isize, isize)) -> (isize, isize) {
-    let abs_x = (head.0-tail.0).abs();
-    let abs_y = (head.1-tail.1).abs();
+    let abs_x = (head.0 - tail.0).abs();
+    let abs_y = (head.1 - tail.1).abs();
     let abs = abs_x.max(abs_y);
     let cmp_x = head.0.cmp(&tail.0);
     let cmp_y = head.1.cmp(&tail.1);
-    let new_x = if abs > 1  {
+    let new_x = if abs > 1 {
         match cmp_x {
-            Greater => tail.0+1,
+            Greater => tail.0 + 1,
             Equal => tail.0,
-            Less => tail.0-1,
+            Less => tail.0 - 1,
         }
-    } else {tail.0};
+    } else {
+        tail.0
+    };
     let new_y = if abs > 1 {
         match cmp_y {
-            Greater => tail.1+1,
+            Greater => tail.1 + 1,
             Equal => tail.1,
-            Less => tail.1-1,
+            Less => tail.1 - 1,
         }
-    } else {tail.1};
+    } else {
+        tail.1
+    };
     (new_x, new_y)
 }
 

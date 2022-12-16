@@ -14,12 +14,22 @@ pub struct Monkey {
     items: Vec<u64>,
     operation: Box<dyn Fn(u64) -> u64>,
     divisor: u64,
-    targets: (usize, usize)
+    targets: (usize, usize),
 }
 
 impl Monkey {
-    fn new(items: Vec<u64>, operation: Box<dyn Fn(u64) -> u64>, divisor: u64, targets: (usize,usize)) -> Self {
-        Self { items, operation, divisor, targets }
+    fn new(
+        items: Vec<u64>,
+        operation: Box<dyn Fn(u64) -> u64>,
+        divisor: u64,
+        targets: (usize, usize),
+    ) -> Self {
+        Self {
+            items,
+            operation,
+            divisor,
+            targets,
+        }
     }
 }
 
@@ -49,91 +59,61 @@ pub fn part2(use_example: &bool) -> u64 {
 fn get_monkeys(use_example: bool) -> Vec<Monkey> {
     if use_example {
         vec![
-            Monkey::new(
-                vec![79, 98],
-                Box::new(|worry| worry * 19),
-                23,
-                (2,3)
-            ),
+            Monkey::new(vec![79, 98], Box::new(|worry| worry * 19), 23, (2, 3)),
             Monkey::new(
                 vec![54, 65, 75, 74],
                 Box::new(|worry| worry + 6),
                 19,
-                (2,0)
+                (2, 0),
             ),
             Monkey::new(
                 vec![79, 60, 97],
                 Box::new(|worry| worry * worry),
                 13,
-                (1,3)
+                (1, 3),
             ),
-            Monkey::new(
-                vec![74],
-                Box::new(|worry| worry + 3),
-                17,
-                (0,1)
-            )
+            Monkey::new(vec![74], Box::new(|worry| worry + 3), 17, (0, 1)),
         ]
     } else {
         vec![
+            Monkey::new(vec![93, 98], Box::new(|worry| worry * 17), 19, (5, 3)),
             Monkey::new(
-              vec![93, 98],
-              Box::new(|worry| worry * 17),
-              19,
-              (5,3)
+                vec![95, 72, 98, 82, 86],
+                Box::new(|worry| worry + 5),
+                13,
+                (7, 6),
             ),
             Monkey::new(
-              vec![95, 72, 98, 82, 86],
-              Box::new(|worry| worry + 5),
-              13,
-              (7,6)
+                vec![85, 62, 82, 86, 70, 65, 83, 76],
+                Box::new(|worry| worry + 8),
+                5,
+                (3, 0),
+            ),
+            Monkey::new(vec![86, 70, 71, 56], Box::new(|worry| worry + 1), 7, (4, 5)),
+            Monkey::new(
+                vec![77, 71, 86, 52, 81, 67],
+                Box::new(|worry| worry + 4),
+                17,
+                (1, 6),
             ),
             Monkey::new(
-              vec![85, 62, 82, 86, 70, 65, 83, 76],
-              Box::new(|worry| worry + 8),
-              5,
-              (3,0)
+                vec![89, 87, 60, 78, 54, 77, 98],
+                Box::new(|worry| worry * 7),
+                2,
+                (1, 4),
             ),
-            Monkey::new(
-              vec![86, 70, 71, 56],
-              Box::new(|worry| worry + 1),
-              7,
-              (4,5)
-            ),
-            Monkey::new(
-              vec![77, 71, 86, 52, 81, 67],
-              Box::new(|worry| worry + 4),
-              17,
-              (1,6)
-            ),
-            Monkey::new(
-              vec![89, 87, 60, 78, 54, 77, 98],
-              Box::new(|worry| worry * 7),
-              2,
-              (1,4)
-            ),
-            Monkey::new(
-              vec![69, 65, 63],
-              Box::new(|worry| worry + 6),
-              3,
-              (7,2)
-            ),
-            Monkey::new(
-              vec![89],
-              Box::new(|worry| worry * worry),
-              11,
-              (0,2)
-            )
+            Monkey::new(vec![69, 65, 63], Box::new(|worry| worry + 6), 3, (7, 2)),
+            Monkey::new(vec![89], Box::new(|worry| worry * worry), 11, (0, 2)),
         ]
     }
 }
 fn monkey_business(mut monkeys: Vec<Monkey>, is_part1: bool) -> u64 {
     let multiple_of_all_divisors = monkeys.iter().fold(1, |acc, monkey| acc * monkey.divisor);
     let mut inspect_count = vec![0; monkeys.len()];
-    for _round in 0..if is_part1 {20} else {10_000} {
+    for _round in 0..if is_part1 { 20 } else { 10_000 } {
         for m in 0..monkeys.len() {
-                // println!("Monkey {} at start of round {}: {:?}", m, round, monkeys[m].items);
-                while !monkeys[m].items.is_empty() {
+            // println!("Monkey {} at start of round {}: {:?}", m, round, monkeys[m].items);
+            while !monkeys[m].items.is_empty() {
                 inspect_count[m] += 1;
                 monkeys[m].items.reverse();
                 let item = monkeys[m].items.pop().unwrap();
@@ -160,7 +140,7 @@ fn monkey_business(mut monkeys: Vec<Monkey>, is_part1: bool) -> u64 {
     // println!("{:?}", inspect_count);
     inspect_count.sort();
     inspect_count.reverse();
-    inspect_count[0]*inspect_count[1]
+    inspect_count[0] * inspect_count[1]
 }
 // *************
 // *** Tests ***
@@ -179,8 +159,7 @@ mod tests {
         assert_eq!(part2(&true), 2713310158);
     }
 
-    const EX1: &'static str = 
-r"Monkey 0:
+    const EX1: &'static str = r"Monkey 0:
 Starting items: 79, 98
 Operation: new = old * 19
 Test: divisible by 23
