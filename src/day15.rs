@@ -53,10 +53,11 @@ pub fn part1(input: &[((isize,isize),(isize,isize))]) -> usize {
         dbg!(xmax);
         dbg!(_ymin);
         dbg!(_ymax);
+        
         #[cfg(test)]
         let target_row = 10;
         #[cfg(not(test))]
-        let target_row = 2000;
+        let target_row = 2_000_000;
     (xmin..=xmax).map(|x| {
         let mut in_range = false;
         for (sensor, beacon, range) in &input {
