@@ -6,7 +6,7 @@
 /// https://docs.rs/regex/1.4.2/regex/#syntax
 // extern crate regex;
 // use self::regex::{Captures, Regex};
-use std::{collections::HashSet, iter::once};
+use std::{collections::HashSet, iter::once, thread::panicking};
 
 // ********************
 // *** Generator(s) ***
@@ -83,6 +83,10 @@ pub fn part1(input: &[((isize, isize), (isize, isize))]) -> isize {
         })
         .collect::<HashSet<_>>()
         .len() as isize;
+        covered_count(&coverage_map) - beacons_on_target_row
+}
+
+fn covered_count(coverage_map: &Vec<(isize,isize)>) -> isize {
     coverage_map
         .iter()
         .fold((0, isize::MIN), |(cnt_in_range, lastx), (xxmin, xxmax)| {
@@ -95,7 +99,6 @@ pub fn part1(input: &[((isize, isize), (isize, isize))]) -> isize {
             (cnt_in_range + new_in_range, *xxmax.max(&lastx))
         })
         .0
-        - beacons_on_target_row
 }
 
 #[aoc(day15, part2)]
@@ -109,45 +112,91 @@ pub fn part2(input: &[((isize, isize), (isize, isize))]) -> isize {
     let target_rows = (0, 20);
     #[cfg(not(test))]
     let target_rows = (0, 4_000_000);
-    let distress_beacons = (target_rows.0..=target_rows.1)
-        .map(|target_row| {
-            let mut coverage_map = input
-                .iter()
-                .filter_map(|(sensor, _beacon, range)| {
-                    if sensor.0 + range >= 0 || sensor.0 - range <= 4_000_000 {
-                        Some((sensor.0.max(0).min(4_000_000), sensor.1))
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>();
+    // let input = input
+    //     .iter()
+    //     .filter(|(sensor, _, range)| {
+    //         sensor.0 + range >= target_rows.0 || sensor.0 - range <= target_rows.1 
+    //     })
+    //     .collect::<Vec<_>>();
+    let distress_beacon_row = (target_rows.0..=target_rows.1)
+        .fold(None,|prev_found, target_row| {
             let mut coverage_map = input
                 .iter()
                 .filter_map(|(sensor, _beacon, range)| {
                     let horizontal_range = range - (sensor.1 - target_row).abs();
-                    if horizontal_range >= 0 {
-                        Some((sensor.0 - horizontal_range, sensor.0 + horizontal_range))
-                    } else {
+                    if horizontal_range < 0 {
                         None
+                    } else {
+                        let leftmost = sensor.0 - horizontal_range;
+                        let rightmost = sensor.0 + horizontal_range;
+                        if leftmost > target_rows.1 || rightmost < target_rows.0 {
+                            None
+                        } else {
+                            Some((leftmost.max(target_rows.0), rightmost.min(target_rows.1)))
+                        }
                     }
                 })
                 .collect::<Vec<_>>();
             coverage_map.sort();
+            let covered_cnt = covered_count(&coverage_map);
+            match (target_rows.1-target_rows.0 + 1) - covered_cnt {
+                0 => prev_found,
+                1 => {
+                    if let Some(prev_row) = prev_found {
+                        panic!("Found 2nd row ({}) with coverage gap.  First was {}.", target_row, prev_row);
+                    }
+                    Some(target_row)
+                },
+                n => panic!("Error: {} locations left uncovered in row {}!", n, target_row)
+            }
+        });
+    let (x,y) = if let Some(found_y) = distress_beacon_row {
+        let found_x = {
+            let mut coverage_map = input
+                .iter()
+                .filter_map(|(sensor, _beacon, range)| {
+                    let horizontal_range = range - (sensor.1 - found_y).abs();
+                    if horizontal_range < 0 {
+                        None
+                    } else {
+                        let leftmost = sensor.0 - horizontal_range;
+                        let rightmost = sensor.0 + horizontal_range;
+                        if leftmost > target_rows.1 || rightmost < target_rows.0 {
+                            None
+                        } else {
+                            Some((leftmost.max(target_rows.0), rightmost.min(target_rows.1)))
+                        }
+                    }
+                })
+                .collect::<Vec<_>>();            
+            coverage_map.sort();
             coverage_map
                 .iter()
-                .fold((0, isize::MIN), |(cnt_in_range, lastx), (xxmin, xxmax)| {
-                    let new_in_range = match (lastx >= *xxmax, lastx >= *xxmin) {
-                        (false, false) => *xxmax - *xxmin + 1,
-                        (false, true) => *xxmax - lastx,
+                .fold((None, -1), |(foundx, lastx), (xxmin, xxmax)| {
+                    let found_gap = match (lastx >= *xxmax, lastx >= *xxmin-1) {
+                        (false, false) => {
+                            if let Some(prev_found_x) = foundx {
+                                panic!("Found gap starting at {} after previous gap found at {} in row {}", lastx+1, prev_found_x, found_y)
+                            }
+                            if *xxmin-lastx == 2 {
+                                Some(*xxmin-1)
+                            } else {
+                                panic!("Too many uncovered locations found ({}) between x = {} and x = {} in row {}", *xxmin-lastx-1, lastx, *xxmin, found_y)
+                            }
+                        },
+                        (false, true) => foundx,
                         (true, false) => panic!("Sorting error"),
-                        (true, true) => 0,
+                        (true, true) => foundx,
                     };
-                    (cnt_in_range + new_in_range, *xxmax.max(&lastx))
+                    (found_gap, *xxmax)
                 })
-        })
-        .collect::<Vec<_>>();
-    assert!(distress_beacons.len() == 1);
-    let (x, y) = distress_beacons.into_iter().nth(0).unwrap();
+                .0.unwrap()   
+        };
+        (found_x, found_y)      
+    } else {
+        panic!("No row found with uncovered location!");
+    };
+    assert!(x != 0);
     let tuning_frequency = x * 4_000_000 + y;
     tuning_frequency
 }
@@ -168,10 +217,10 @@ mod tests {
         assert_eq!(part1(&gen1(EX1)), 26);
     }
 
-    // #[test]
-    // fn test_ex1_part2() {
-    //     assert_eq!(part2(&gen1(EX1)), 45000);
-    // }
+    #[test]
+    fn test_ex1_part2() {
+        assert_eq!(part2(&gen1(EX1)), 56000011);
+    }
 
     const EX1: &'static str = r"Sensor at x=2, y=18: closest beacon is at x=-2, y=15
 Sensor at x=9, y=16: closest beacon is at x=10, y=16
