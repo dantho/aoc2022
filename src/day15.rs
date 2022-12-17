@@ -83,13 +83,14 @@ pub fn part1(input: &[((isize, isize), (isize, isize))]) -> isize {
         })
         .collect::<HashSet<_>>()
         .len() as isize;
-        covered_count(&coverage_map) - beacons_on_target_row
+        covered_count(&coverage_map, None) - beacons_on_target_row
 }
 
-fn covered_count(coverage_map: &Vec<(isize,isize)>) -> isize {
+fn covered_count(coverage_map: &Vec<(isize,isize)>, range: Option<(isize,isize)>) -> isize {
+    let range = range.unwrap_or((isize::MIN+1, isize::MAX-1));
     coverage_map
         .iter()
-        .fold((0, isize::MIN), |(cnt_in_range, lastx), (xxmin, xxmax)| {
+        .fold((0, range.0-1), |(cnt_in_range, lastx), (xxmin, xxmax)| {
             let new_in_range = match (lastx >= *xxmax, lastx >= *xxmin) {
                 (false, false) => *xxmax - *xxmin + 1,
                 (false, true) => *xxmax - lastx,
@@ -138,7 +139,7 @@ pub fn part2(input: &[((isize, isize), (isize, isize))]) -> isize {
                 })
                 .collect::<Vec<_>>();
             coverage_map.sort();
-            let covered_cnt = covered_count(&coverage_map);
+            let covered_cnt = covered_count(&coverage_map, Some(target_rows));
             match (target_rows.1-target_rows.0 + 1) - covered_cnt {
                 0 => prev_found,
                 1 => {
@@ -181,6 +182,7 @@ pub fn part2(input: &[((isize, isize), (isize, isize))]) -> isize {
                             if *xxmin-lastx == 2 {
                                 Some(*xxmin-1)
                             } else {
+                                dbg!(foundx);
                                 panic!("Too many uncovered locations found ({}) between x = {} and x = {} in row {}", *xxmin-lastx-1, lastx, *xxmin, found_y)
                             }
                         },
