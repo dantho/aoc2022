@@ -38,12 +38,26 @@ pub fn gen1(input: &str) -> Vec<(Valve, Vec<String>)> {
 // *********************
 #[aoc(day16, part1)]
 pub fn part1(input: &[(Valve, Vec<String>)]) -> u32 {
-    let valve_list = input
+    let valves = input
         .iter()
         .map(|(valve, paths)| (valve.name.to_string(), (valve.clone(), paths.clone())))
         .collect::<HashMap<String,(Valve,Vec<String>)>>();
-    
+    let valve_cnt = valves.len();
+
+    // find shortest path length from each valve to ALL OTHER VALVES
+    // This might come in handy
+    let path_lengths: HashMap<String, HashMap<String, u32>> = valves.keys()
+    .map(|valve_name| {
+        let mut distances = valves.keys().map(|name|(name.to_string(), u32::MAX)).collect::<HashMap<String, u32>>();
+        distances.entry(valve_name.to_string()).and_modify(|d| *d = 0).or_insert(0); // distance to self is 0
+        // This is too complicated.  Better work out a plan!
+    }).collect();
+
     888
+}
+
+fn dykstra_1(starting_valve_name: &str, distances: &mut HashMap<String, u32>, valves: &HashMap<String, (Valve, Vec<String>)>) {
+    // Ugh.
 }
 
 // *************
