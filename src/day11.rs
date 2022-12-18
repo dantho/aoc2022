@@ -107,6 +107,7 @@ fn get_monkeys(use_example: bool) -> Vec<Monkey> {
         ]
     }
 }
+
 fn monkey_business(mut monkeys: Vec<Monkey>, is_part1: bool) -> u64 {
     let multiple_of_all_divisors = monkeys.iter().fold(1, |acc, monkey| acc * monkey.divisor);
     let mut inspect_count = vec![0; monkeys.len()];
@@ -142,6 +143,7 @@ fn monkey_business(mut monkeys: Vec<Monkey>, is_part1: bool) -> u64 {
     inspect_count.reverse();
     inspect_count[0] * inspect_count[1]
 }
+
 // *************
 // *** Tests ***
 // *************
@@ -159,6 +161,7 @@ mod tests {
         assert_eq!(part2(&true), 2713310158);
     }
 
+    #[allow(unused)]
     const EX1: &'static str = r"Monkey 0:
 Starting items: 79, 98
 Operation: new = old * 19
