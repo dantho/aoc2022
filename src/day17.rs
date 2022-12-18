@@ -129,7 +129,7 @@ pub fn gen1(input: &str) -> String {
 // *********************
 #[aoc(day17, part1)]
 pub fn part1(input: &str) -> usize {
-    const ROCK_MAX: usize = 100_000;
+    const ROCK_MAX: usize = 2022;
     const ROCK_LEN: usize = 5;
     let jets = input.chars().collect::<Vec<_>>();
     let mut rock_pile = RockPile::new();
@@ -138,7 +138,7 @@ pub fn part1(input: &str) -> usize {
     for step in 0.. {
         let even_step = 0 == step % 2;
         let ndx = step / 2;
-        if ndx % jets.len() == 0 && even_step || rock_cnt == 1010 {
+        if ndx % jets.len() == 0 && even_step || rock_cnt == 1011 {
             println!("ndx: {}, Rock_cnt: {}, Rock: {}  Pile_top: {}", ndx, rock_cnt, rock_cnt % 5, rock_pile.top());
         }
         // First make new rock appear if necessary
