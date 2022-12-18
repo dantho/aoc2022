@@ -49,7 +49,7 @@ pub fn part1(input: &[(Valve, Vec<String>)]) -> u32 {
     let path_lengths: HashMap<String, HashMap<String, u32>> = valves.keys()
     .map(|valve_name| {
         let mut distances = valves.keys().map(|name|(name.to_string(), u32::MAX)).collect::<HashMap<String, u32>>();
-        distances.entry(valve_name.to_string()).and_modify(|d| *d = 0).or_insert(0); // distance to self is 0
+        distances.entry(valve_name.to_string()).and_modify(|d| *d = 0); // distance to self is 0
         // This is too complicated.  Better work out a plan!
     }).collect();
 

@@ -20,10 +20,10 @@ Teradyne private [Leaderboard](https://adventofcode.com/2022/leaderboard/private
 | [12: Hill Climbing Algorithm](https://adventofcode.com/2022/day/12) |⭐⭐|  |
 | [13: Distress Signal](https://adventofcode.com/2022/day/13) |⭐⭐|  |
 | [14: Regolith Reservoir](https://adventofcode.com/2022/day/14) |⭐⭐| Filling Fast Fun!  With sand!  References 2018's Day 17: Reservoir Research, but I rewrote from scratch.  Faster?  Animation opportunity. |
-| [15: Beacon Exclusion Zone](https://adventofcode.com/2022/day/15) |⭐| Brute force barely works in part 1. My part 2 solution is broken,  too complicated. |
-| [16: Proboscidea Volcanium](https://adventofcode.com/2022/day/17) |  | Valves, flow rates, paths. Weighted Graph Algo, Maximum/Minimum Spanning Trees, greedy algorithms, all paths? |
-| [17: Pyroclastic Flow](https://adventofcode.com/2022/day/17) |  | Tetris with volcanic rocks! |
-| [18: ](https://adventofcode.com/2022/day/18) |  |  |
+| [15: Beacon Exclusion Zone](https://adventofcode.com/2022/day/15) |⭐⭐| Brute force barely works in part 1. Part 2 was kinda brutal. |
+| [16: Proboscidea Volcanium](https://adventofcode.com/2022/day/17) |  | HARD! Valves, flow rates, paths. Weighted Graph Algo, Maximum/Minimum Spanning Trees, greedy algorithms, all paths? Ugh. Skipping for now. |
+| [17: Pyroclastic Flow](https://adventofcode.com/2022/day/17) |⭐⭐| Tetris with volcanic rocks! Part 2 is an annoying repetition detection thing. A spreadsheet helps.  Also helps to realize repetition implies, THE WHOLE OF THE DATASET will repeat, so ANY part of it also repeats. |
+| [18: Boiling Boulders](https://adventofcode.com/2022/day/18) |⭐⭐| Finding air in 3-space. Part 2 is finding open air only. |
 | [19: ](https://adventofcode.com/2022/day/19) |  |  |
 | [20: ](https://adventofcode.com/2022/day/20) |  |  |
 | [21: ](https://adventofcode.com/2022/day/21) |  |  |
