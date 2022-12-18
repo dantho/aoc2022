@@ -6,7 +6,7 @@
 /// https://docs.rs/regex/1.4.2/regex/#syntax
 // extern crate regex;
 // use self::regex::{Captures, Regex};
-use std::{collections::HashSet, iter::once, thread::panicking};
+use std::{collections::HashSet, iter::once};
 
 // ********************
 // *** Generator(s) ***

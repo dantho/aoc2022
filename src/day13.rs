@@ -8,7 +8,7 @@ use crate::day13::ListOrVal::*;
 // extern crate regex;
 // use self::regex::{Captures, Regex};
 use std::{
-    cmp::Ordering::{self, Equal, Greater, Less},
+    cmp::Ordering::{self, Equal, Less},
     str::FromStr,
 };
 

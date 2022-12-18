@@ -7,7 +7,7 @@
 // extern crate regex;
 // use self::regex::{Captures, Regex};
 
-use std::{fmt::Display, collections::HashSet, iter::Map};
+use std::{fmt::Display, collections::HashSet};
 
 const CAVE_WIDTH: usize = 7;
 
@@ -33,6 +33,7 @@ impl Rock {
     fn width(&self) -> usize {
         self.right()-self.left() + 1
     }
+    #[allow(unused)]
     fn height(&self) -> usize {
         self.top()-self.bottom() + 1
     }
@@ -46,7 +47,7 @@ impl Rock {
             4 => vec![(0,1),(1,1),(0,0),(1,0)],
             _ => panic!("Illegal Rock ndx!"),
         };
-        let mut rock = Rock {shape, pos};
+        let rock = Rock {shape, pos};
         rock
     }
     fn pieces(&self) -> Vec<(usize, usize)> {
