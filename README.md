@@ -24,7 +24,7 @@ Teradyne private [Leaderboard](https://adventofcode.com/2022/leaderboard/private
 | [16: Proboscidea Volcanium](https://adventofcode.com/2022/day/17) |  | HARD! Valves, flow rates, paths. Weighted Graph Algo, Maximum/Minimum Spanning Trees, greedy algorithms, all paths? Ugh. Skipping for now. |
 | [17: Pyroclastic Flow](https://adventofcode.com/2022/day/17) |⭐⭐| Tetris with volcanic rocks! Part 2 is an annoying repetition detection thing. A spreadsheet helps.  Also helps to realize repetition implies, THE WHOLE OF THE DATASET will repeat, so ANY part of it also repeats. |
 | [18: Boiling Boulders](https://adventofcode.com/2022/day/18) |⭐⭐| Finding air in 3-space. Part 2 is finding open air only. |
-| [19: ](https://adventofcode.com/2022/day/19) |  |  |
+| [19: Not Enough Minerals](https://adventofcode.com/2022/day/19) |  |  |
 | [20: ](https://adventofcode.com/2022/day/20) |  |  |
 | [21: ](https://adventofcode.com/2022/day/21) |  |  |
 | [22: ](https://adventofcode.com/2022/day/22) |  |  |
