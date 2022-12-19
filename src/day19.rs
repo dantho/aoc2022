@@ -6,23 +6,103 @@
 /// https://docs.rs/regex/1.4.2/regex/#syntax
 // extern crate regex;
 // use self::regex::{Captures, Regex};
+use crate::day19::Material::*;
 
 // ********************
 // *** Generator(s) ***
 // ********************/
 #[aoc_generator(day19)]
-pub fn gen1(input: &str) -> Vec<Vec<isize>> {
+pub fn gen1(input: &str) -> Vec<Vec<usize>> {
     input.lines()
-        .map(|line| parse_numbers(line))
+        .map(|line| parse_numbers_usize(line))
         .collect::<Vec<_>>()
+}
+
+#[derive(Clone)]
+pub enum Material {
+    Clay(usize),
+    Geode(usize),
+    Obsidian(usize),
+    Ore(usize),
 }
 
 // *********************
 // *** Part1 & Part2 ***
 // *********************
 #[aoc(day19, part1)]
-pub fn part1(input: &[Vec<isize>]) -> usize {
-    input.len() * input[0].len()
+pub fn part1(input: &[Vec<usize>]) -> usize {
+    let factories: Vec<Factory> = input.iter()
+    .map(|inp| Factory::new(inp))
+    .collect();
+
+    factories.len()
+}
+
+// *********************
+// *** Detailed stuf ***
+// *********************
+pub struct Robot {
+    produces: Material,
+    cost: Vec<Material>,
+    count: usize,
+}
+
+impl Robot {
+    fn add(&mut self, n: usize) {
+        self.count += n;
+    }
+}
+
+pub struct Inventory {
+    clay: Material,
+    geode: Material,
+    obsidian: Material,
+    ore: Material,
+}
+
+pub struct robot_list {
+    clay: Robot,
+    geode: Robot,
+    obsidian: Robot,
+    ore: Robot,
+}
+
+pub struct Factory {
+    blueprint: usize,
+    inventory: [Material;4],
+    robots: robot_list,
+}
+
+impl Factory {
+    fn new(input: &[usize]) -> Self {
+        let blueprint = input[0];
+        let inventory = [
+            Clay(0),
+            Geode(0),
+            Obsidian(0),
+            Ore(0),
+        ];
+        // a robot
+        let produces = Clay(1);
+        let cost = vec![Ore(input[2])];
+        let clay = Robot { produces, cost, count: 0 };
+        // a robot
+        let produces = Geode(1);
+        let cost = vec![Ore(input[5]), Obsidian(input[6])];
+        let geode = Robot { produces, cost, count: 0 };
+        // a robot
+        let produces = Obsidian(1);
+        let cost = vec![Ore(input[3]), Clay(input[4])];
+        let obsidian = Robot { produces, cost, count: 0 };
+        // a robot
+        let produces = Ore(1);
+        let cost = vec![Ore(input[1])];
+        let ore = Robot { produces, cost, count: 0 };
+
+        let robots = robot_list {clay, geode, obsidian, ore};
+
+        Factory { blueprint, inventory, robots }
+    }
 }
 
 // #[aoc(day19, part2)]
@@ -35,7 +115,14 @@ fn parse_numbers(s: &str) -> Vec<isize> {
     .map(|c| if c.is_numeric() || c == '-' {c} else {' '}).collect();
     just_nums.trim().split(' ')
         .filter(|s|!s.is_empty())
-        .map(|s|s.parse().unwrap()).collect()
+        .map(|s|s.parse().unwrap())
+        .collect()
+}
+
+fn parse_numbers_usize(s: &str) -> Vec<usize> {
+    parse_numbers(s).into_iter()
+    .map(|i| i as usize)
+    .collect()    
 }
 // *************
 // *** Tests ***
@@ -65,7 +152,7 @@ mod tests {
     }
     #[test]
     fn test_ex1_part1() {
-        assert_eq!(part1(&gen1(EX1)), 24000);
+        assert_eq!(part1(&gen1(EX1)), 33);
     }
 
     // #[test]
