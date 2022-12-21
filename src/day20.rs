@@ -44,20 +44,19 @@ pub fn part1(input: &[isize]) -> isize {
         assert_eq!(input[input_index[input_index_lookup[i]]], value);
 
         let before_pos = input_index_lookup[i];
-        let after_pos = signed_mod(before_pos as isize + value + if value > 0 {1} else {0}, len);
-        dbg!(before_pos);
-        dbg!(after_pos);
-        // mix! (move an element in input_indexes from before position to after position)
+        let after_pos = signed_mod(before_pos as isize + value + if value >= 0 {0} else {-1}, len);
+        #[cfg(test)]
+        {
+            dbg!(before_pos);
+            dbg!(after_pos);
+        }
+        // mix! (move an element in input_indexes from the before position to just after the after position)
         let ndx_to_move = input_index[before_pos];
         input_index = match before_pos.cmp(&after_pos) {
-            Less => [&input_index[..before_pos], &input_index[(before_pos+1)..after_pos], &[ndx_to_move], &input_index[after_pos..]].concat(),
+            Less => [&input_index[..before_pos], &input_index[(before_pos+1)..=after_pos], &[ndx_to_move], &input_index[(after_pos+1)..]].concat(),
             Equal => input_index,
-            Greater => [&input_index[..after_pos], &[ndx_to_move], &input_index[after_pos..before_pos], &input_index[(before_pos+1)..]].concat(),
+            Greater => [&input_index[..=after_pos], &[ndx_to_move], &input_index[(after_pos+1)..before_pos], &input_index[(before_pos+1)..]].concat(),
         };
-        // Hack in this edge case I don't really understand:
-        if after_pos == 0 && value < 0 {
-            input_index = [&input_index[1..], &input_index[0..1]].concat().to_vec()
-        }
         // Now rebuild the index lookup table
         let mut tmp: Vec<(usize,usize)> = input_index.iter().enumerate().map(|(i,ndx)| (*ndx,i)).collect();
         tmp.sort();
@@ -105,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        assert_eq!(part1(&gen1(EX1)), 3);
+        assert_eq!(part1(&gen1(EX1)), 3+996);
     }
 
     // #[test]
