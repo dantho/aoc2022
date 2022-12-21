@@ -8,108 +8,6 @@
 // use self::regex::{Captures, Regex};
 use crate::day19::Material::*;
 
-// ********************
-// *** Generator(s) ***
-// ********************/
-#[aoc_generator(day19)]
-pub fn gen1(input: &str) -> Vec<Vec<usize>> {
-    input.lines()
-        .map(|line| parse_numbers_usize(line))
-        .collect::<Vec<_>>()
-}
-
-#[derive(Clone)]
-pub enum Material {
-    Clay(usize),
-    Geode(usize),
-    Obsidian(usize),
-    Ore(usize),
-}
-
-// *********************
-// *** Part1 & Part2 ***
-// *********************
-#[aoc(day19, part1)]
-pub fn part1(input: &[Vec<usize>]) -> usize {
-    let factories: Vec<Factory> = input.iter()
-    .map(|inp| Factory::new(inp))
-    .collect();
-
-    factories.len()
-}
-
-// *********************
-// *** Detailed stuf ***
-// *********************
-pub struct Robot {
-    produces: Material,
-    cost: Vec<Material>,
-    count: usize,
-}
-
-impl Robot {
-    fn add(&mut self, n: usize) {
-        self.count += n;
-    }
-}
-
-pub struct Inventory {
-    clay: Material,
-    geode: Material,
-    obsidian: Material,
-    ore: Material,
-}
-
-pub struct robot_list {
-    clay: Robot,
-    geode: Robot,
-    obsidian: Robot,
-    ore: Robot,
-}
-
-pub struct Factory {
-    blueprint: usize,
-    inventory: [Material;4],
-    robots: robot_list,
-}
-
-impl Factory {
-    fn new(input: &[usize]) -> Self {
-        let blueprint = input[0];
-        let inventory = [
-            Clay(0),
-            Geode(0),
-            Obsidian(0),
-            Ore(0),
-        ];
-        // a robot
-        let produces = Clay(1);
-        let cost = vec![Ore(input[2])];
-        let clay = Robot { produces, cost, count: 0 };
-        // a robot
-        let produces = Geode(1);
-        let cost = vec![Ore(input[5]), Obsidian(input[6])];
-        let geode = Robot { produces, cost, count: 0 };
-        // a robot
-        let produces = Obsidian(1);
-        let cost = vec![Ore(input[3]), Clay(input[4])];
-        let obsidian = Robot { produces, cost, count: 0 };
-        // a robot
-        let produces = Ore(1);
-        let cost = vec![Ore(input[1])];
-        let ore = Robot { produces, cost, count: 0 };
-
-        let robots = robot_list {clay, geode, obsidian, ore};
-
-        Factory { blueprint, inventory, robots }
-    }
-}
-
-// #[aoc(day19, part2)]
-// pub fn part2(input: &Vec<Vec<u32>>) -> u32 {
-//     999
-// }
-
 fn parse_numbers(s: &str) -> Vec<isize> {
     let just_nums: String = s.chars()
     .map(|c| if c.is_numeric() || c == '-' {c} else {' '}).collect();
@@ -124,6 +22,197 @@ fn parse_numbers_usize(s: &str) -> Vec<usize> {
     .map(|i| i as usize)
     .collect()    
 }
+
+// ********************
+// *** Generator(s) ***
+// ********************/
+#[aoc_generator(day19)]
+pub fn gen1(input: &str) -> Vec<Vec<usize>> {
+    input.lines()
+        .map(|line| parse_numbers_usize(line))
+        .collect::<Vec<_>>()
+}
+
+// *********************
+// *** Part1 & Part2 ***
+// *********************
+#[aoc(day19, part1)]
+pub fn part1(input: &[Vec<usize>]) -> usize {
+    let factories: Vec<Factory> = input.iter()
+    .map(|inp| Factory::new(inp))
+    .collect();
+
+    factories.into_iter()
+        .map(|mut f| {
+            f.run(24);
+            println!("{:?}",f);
+            if let Geode(geode_cnt) = f.inventory[3] {
+                geode_cnt * f.blueprint
+            } else {
+                panic!("Should be Geode(?)")
+            }
+        }).sum()
+}
+
+// *********************
+// *** Detailed stuf ***
+// *********************
+#[derive(Clone, Copy, Debug)]
+pub enum Material {
+    Clay(usize),
+    Geode(usize),
+    Obsidian(usize),
+    Ore(usize),
+}
+
+#[derive(Debug)]
+pub struct Robot {
+    produces: Material,
+    cost: Vec<Material>,
+    count: usize,
+}
+
+impl Robot {
+    fn add(&mut self, n: usize) {
+        self.count += n;
+    }
+}
+
+#[derive(Debug)]
+pub struct Inventory {
+    ore: Material,
+    clay: Material,
+    obsidian: Material,
+    geode: Material,
+}
+
+#[derive(Debug)]
+pub struct RobotList {
+    geode: Robot,
+    obsidian: Robot,
+    clay: Robot,
+    ore: Robot,
+}
+
+#[derive(Debug)]
+pub struct Factory {
+    blueprint: usize,
+    inventory: [Material;4],
+    robots: RobotList,
+}
+
+impl Factory {
+    fn new(input: &[usize]) -> Self {
+        let blueprint = input[0];
+        let inventory = [
+            Ore(0),
+            Clay(0),
+            Obsidian(0),
+            Geode(0),
+        ];
+        // a robot
+        let produces = Ore(1);
+        let cost = vec![Ore(input[1])];
+        let ore = Robot { produces, cost, count: 1 };
+        // a robot
+        let produces = Clay(1);
+        let cost = vec![Ore(input[2])];
+        let clay = Robot { produces, cost, count: 0 };
+        // a robot
+        let produces = Obsidian(1);
+        let cost = vec![Ore(input[3]), Clay(input[4])];
+        let obsidian = Robot { produces, cost, count: 0 };
+        // a robot
+        let produces = Geode(1);
+        let cost = vec![Ore(input[5]), Obsidian(input[6])];
+        let geode = Robot { produces, cost, count: 0 };
+
+        let robots = RobotList {ore, clay, obsidian, geode};
+
+        Factory { blueprint, inventory, robots }
+    }
+
+    fn run(&mut self, minutes: usize) {
+        for _m in 0..minutes {
+            // Anticipate to-be-produced resource
+            let produced_this_minute = [
+                self.robots.ore.count,
+                self.robots.clay.count,
+                self.robots.obsidian.count,
+                self.robots.geode.count
+            ];
+            // Tally previously produced resources
+            let mut available_inventory = if let [
+                Ore(a),
+                Clay(b),
+                Obsidian(c),
+                Geode(d),
+            ] = self.inventory {
+                [a,b,c,d]
+            } else {
+                panic!("Inventory structure mismatch")
+            };
+            // Spend available resources to build robots, starting with most expensive first
+            available_inventory = if let [mut ore, mut clay, mut obs, mut geode] = available_inventory {
+                // Geode Robot
+                if let (Ore(ore_cost),Obsidian(obsidian_cost)) = 
+                        (self.robots.geode.cost[0], self.robots.geode.cost[1]) {
+                    let robot_cnt = ore / ore_cost;
+                    let robot_cnt = robot_cnt.min(obs / obsidian_cost);
+                    if robot_cnt > 0 {
+                        ore -= robot_cnt * ore_cost;
+                        obs -= robot_cnt * obsidian_cost;
+                        self.robots.geode.count += robot_cnt;
+                    }
+                }
+                // Obsidian Robot
+                if let (Ore(ore_cost), Clay(clay_cost)) = 
+                        (self.robots.obsidian.cost[0], self.robots.obsidian.cost[1]) {
+                    let robot_cnt = ore / ore_cost;
+                    let robot_cnt = robot_cnt.min(clay / clay_cost);
+                    if robot_cnt > 0 {
+                        ore -= robot_cnt * ore_cost;
+                        clay -= robot_cnt * clay_cost;
+                        self.robots.obsidian.count += robot_cnt;
+                    }
+                }
+                // Clay Robot
+                if let Ore(ore_cost) = self.robots.clay.cost[0] {
+                    let robot_cnt = ore / ore_cost;
+                    if robot_cnt > 0 {
+                        ore -= robot_cnt * ore_cost;
+                        self.robots.clay.count += robot_cnt;
+                    }
+                }
+                // Ore Robot
+                if let Ore(ore_cost) = self.robots.ore.cost[0] {
+                    let robot_cnt = ore / ore_cost;
+                    if robot_cnt > 0 {
+                        ore -= robot_cnt * ore_cost;
+                        self.robots.ore.count += robot_cnt;
+                    }
+                }
+                [ore,clay,obs,geode]
+            } else {
+                panic!("Inventory structure mismatch")
+            };
+            // Add remainin inventory with new produciton
+            let ore = available_inventory[0] + produced_this_minute[0];
+            let clay = available_inventory[1] + produced_this_minute[1];
+            let obs = available_inventory[2] + produced_this_minute[2];
+            let geode = available_inventory[3] + produced_this_minute[3];
+
+            self.inventory = [
+                Ore(ore),
+                Clay(clay),
+                Obsidian(obs),
+                Geode(geode),
+            ];
+            println!("Inventory: {:?}", self.inventory);
+        }
+    }
+}
+
 // *************
 // *** Tests ***
 // *************
