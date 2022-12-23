@@ -26,8 +26,8 @@ Teradyne private [Leaderboard](https://adventofcode.com/2022/leaderboard/private
 | [18: Boiling Boulders](https://adventofcode.com/2022/day/18) |⭐⭐| Finding air in 3-space. Part 2 is finding open air only. |
 | [19: Not Enough Minerals](https://adventofcode.com/2022/day/19) |  | Robot factory processing Clay, Ore, Obsidian, Geode. |
 | [20: Grove Positioning System](https://adventofcode.com/2022/day/20) |  | Seemingly simple unscramble. Anything but!! |
-| [21: ](https://adventofcode.com/2022/day/21) |  |  |
-| [22: ](https://adventofcode.com/2022/day/22) |  |  |
-| [23: ](https://adventofcode.com/2022/day/23) |  |  |
+| [21: Monkey Math](https://adventofcode.com/2022/day/21) |  |  |
+| [22: Monkey Map](https://adventofcode.com/2022/day/22) |  |  |
+| [23: Unstable Diffusion](https://adventofcode.com/2022/day/23) |  |  |
 | [24: ](https://adventofcode.com/2022/day/24) |  |  |
 | [25: ](https://adventofcode.com/2022/day/25) |  |  |

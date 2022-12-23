@@ -141,8 +141,8 @@ impl Factory {
                 self.robots.obsidian.count,
                 self.robots.geode.count
             ];
-            // Tally previously produced resources
-            let mut available_inventory = if let [
+            // Restructure data format of previously produced resources
+            let available_inventory = if let [
                 Ore(a),
                 Clay(b),
                 Obsidian(c),
@@ -152,55 +152,51 @@ impl Factory {
             } else {
                 panic!("Inventory structure mismatch")
             };
-            // Spend available resources to build robots, starting with most expensive first
-            available_inventory = if let [mut ore, mut clay, mut obs, mut geode] = available_inventory {
-                // Geode Robot
-                if let (Ore(ore_cost),Obsidian(obsidian_cost)) = 
-                        (self.robots.geode.cost[0], self.robots.geode.cost[1]) {
-                    let robot_cnt = ore / ore_cost;
-                    let robot_cnt = robot_cnt.min(obs / obsidian_cost);
-                    if robot_cnt > 0 {
-                        ore -= robot_cnt * ore_cost;
-                        obs -= robot_cnt * obsidian_cost;
-                        self.robots.geode.count += robot_cnt;
-                    }
+            // Spend resources in inventory to build robots, starting with most expensive first
+            let [mut ore, mut clay, mut obs, mut geode] = available_inventory;
+            // Geode Robot
+            if let (Ore(ore_cost),Obsidian(obsidian_cost)) = 
+                    (self.robots.geode.cost[0], self.robots.geode.cost[1]) {
+                let robot_cnt = ore / ore_cost;
+                let robot_cnt = robot_cnt.min(obs / obsidian_cost);
+                if robot_cnt > 0 {
+                    ore -= robot_cnt * ore_cost;
+                    obs -= robot_cnt * obsidian_cost;
+                    geode += robot_cnt;
                 }
-                // Obsidian Robot
-                if let (Ore(ore_cost), Clay(clay_cost)) = 
-                        (self.robots.obsidian.cost[0], self.robots.obsidian.cost[1]) {
-                    let robot_cnt = ore / ore_cost;
-                    let robot_cnt = robot_cnt.min(clay / clay_cost);
-                    if robot_cnt > 0 {
-                        ore -= robot_cnt * ore_cost;
-                        clay -= robot_cnt * clay_cost;
-                        self.robots.obsidian.count += robot_cnt;
-                    }
+            }
+            // Obsidian Robot
+            if let (Ore(ore_cost), Clay(clay_cost)) = 
+                    (self.robots.obsidian.cost[0], self.robots.obsidian.cost[1]) {
+                let robot_cnt = ore / ore_cost;
+                let robot_cnt = robot_cnt.min(clay / clay_cost);
+                if robot_cnt > 0 {
+                    ore -= robot_cnt * ore_cost;
+                    clay -= robot_cnt * clay_cost;
+                    obs += robot_cnt;
                 }
-                // Clay Robot
-                if let Ore(ore_cost) = self.robots.clay.cost[0] {
-                    let robot_cnt = ore / ore_cost;
-                    if robot_cnt > 0 {
-                        ore -= robot_cnt * ore_cost;
-                        self.robots.clay.count += robot_cnt;
-                    }
+            }
+            // Clay Robot
+            if let Ore(ore_cost) = self.robots.clay.cost[0] {
+                let robot_cnt = ore / ore_cost;
+                if robot_cnt > 0 {
+                    ore -= robot_cnt * ore_cost;
+                    clay += robot_cnt;
                 }
-                // Ore Robot
-                if let Ore(ore_cost) = self.robots.ore.cost[0] {
-                    let robot_cnt = ore / ore_cost;
-                    if robot_cnt > 0 {
-                        ore -= robot_cnt * ore_cost;
-                        self.robots.ore.count += robot_cnt;
-                    }
+            }
+            // Ore Robot
+            if let Ore(ore_cost) = self.robots.ore.cost[0] {
+                let robot_cnt = ore / ore_cost;
+                if robot_cnt > 0 {
+                    ore -= robot_cnt * ore_cost;
+                    ore += robot_cnt;
                 }
-                [ore,clay,obs,geode]
-            } else {
-                panic!("Inventory structure mismatch")
-            };
-            // Add remainin inventory with new produciton
-            let ore = available_inventory[0] + produced_this_minute[0];
-            let clay = available_inventory[1] + produced_this_minute[1];
-            let obs = available_inventory[2] + produced_this_minute[2];
-            let geode = available_inventory[3] + produced_this_minute[3];
+            }
+            // Add new production to remaining inventory
+            ore += produced_this_minute[0];
+            clay += produced_this_minute[1];
+            obs += produced_this_minute[2];
+            geode += produced_this_minute[3];
 
             self.inventory = [
                 Ore(ore),
