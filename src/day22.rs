@@ -169,8 +169,8 @@ struct PasswordBoard {
 impl PasswordBoard {
     fn new(map: &[Vec<char>]) -> Self {
         let map = map.to_vec();
-        // #[cfg(test)]
-        let fold_map: FoldMap = [
+        #[cfg(test)]
+        let fold_map = [
             // from dir       to    dir   is_rev is_transposed
             (((0,2), Up),   ((1,0), Down,  true)),
             (((0,2), Down), ((1,2), Down,  false)),
@@ -201,7 +201,41 @@ impl PasswordBoard {
             (((2,3), Down), ((1,0), Right, true)),
             (((2,3), Left), ((2,2), Left,  false)),
             (((2,3), Right),((0,2), Left,  true)),
-        ].to_vec().into_iter()
+        ];
+        #[cfg(not(test))]
+        let fold_map = [
+            // from dir       to    dir   is_rev is_transposed
+            (((0,2), Up),   ((1,0), Down,  true)),
+            (((0,2), Down), ((1,2), Down,  false)),
+            (((0,2), Left), ((1,1), Down,  false)),
+            (((0,2), Right),((2,3), Left,  false)),
+  
+            (((1,0), Up),   ((0,2), Down,  false)),
+            (((1,0), Down), ((2,2), Up,    false)),
+            (((1,0), Left), ((2,3), Up,    false)),
+            (((1,0), Right),((1,1), Right, false)),
+  
+            (((1,1), Up),   ((0,2), Right, false)),
+            (((1,1), Down), ((2,2), Right, true)),
+            (((1,1), Left), ((1,0), Left,  false)),
+            (((1,1), Right),((1,2), Right, false)),
+  
+            (((1,2), Up),   ((0,2), Up,    false)),
+            (((1,2), Down), ((2,2), Down,  false)),
+            (((1,2), Left), ((1,1), Left,  false)),
+            (((1,2), Right),((2,3), Down,  true)),
+  
+            (((2,2), Up),   ((1,2), Up,    false)),
+            (((2,2), Down), ((1,0), Up,    true)),
+            (((2,2), Left), ((1,1), Up,    true)),
+            (((2,2), Right),((2,3), Right, false)),
+  
+            (((2,3), Up),   ((1,2), Left,  true)),
+            (((2,3), Down), ((1,0), Right, true)),
+            (((2,3), Left), ((2,2), Left,  false)),
+            (((2,3), Right),((0,2), Left,  true)),
+        ];
+        let fold_map: FoldMap = fold_map.to_vec().into_iter()
         .map(|((from_q,from_dir),(to_q,to_dir,to_rev))| {
             let to_transpose = match from_dir {
                 Up => to_dir == Left || to_dir == Right,
@@ -211,29 +245,6 @@ impl PasswordBoard {
             };
             ((from_q,from_dir),(to_q,to_dir,to_rev,to_transpose))
         }).collect::<FoldMap>();
-        // #[not(cfg(test))]
-        // let fold_map = HashMap::from([
-        //     (((0,2),Up),((),DDIIRR,false,false)),
-        //     (((0,2),Down),((),DDIIRR,false,false)),
-        //     (((0,2),Left),((),DDIIRR,false,false)),
-        //     (((0,2),Right),((),DDIIRR,false,false)),
-        //     (((1,0),Up),((),DDIIRR,false,false)),
-        //     (((1,0),Down),((),DDIIRR,false,false)),
-        //     (((1,0),Left),((),DDIIRR,false,false)),
-        //     (((1,0),Right),((),DDIIRR,false,false)),
-        //     (((1,1),Up),((),DDIIRR,false,false)),
-        //     (((1,1),Down),((),DDIIRR,false,false)),
-        //     (((1,1),Left),((),DDIIRR,false,false)),
-        //     (((1,1),Right),((),DDIIRR,false,false)),
-        //     (((2,2),Up),((),DDIIRR,false,false)),
-        //     (((2,2),Down),((),DDIIRR,false,false)),
-        //     (((2,2),Left),((),DDIIRR,false,false)),
-        //     (((2,2),Right),((),DDIIRR,false,false)),
-        //     (((2,3),Up),((),DDIIRR,false,false)),
-        //     (((2,3),Down),((),DDIIRR,false,false)),
-        //     (((2,3),Left),((),DDIIRR,false,false)),
-        //     (((2,3),Right),((),DDIIRR,false,false)),
-        // ]);
 
         // Above maps are manually entered and determined by inspection
         // in 3-space with folded paper.  This is an error-prone process.
