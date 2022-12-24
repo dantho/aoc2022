@@ -58,8 +58,7 @@ pub fn part1(input: &(Vec<Vec<char>>, String)) -> usize {
     assert_eq!(pw_board.map_c(pos), '.');
     facing = facing.turn(Left); // Anticipate extra Right turn we added at start, above
 
-    moves.iter()
-    .for_each(|(&turn_c, &steps)| {
+    moves.iter().for_each(|(&turn_c, &steps)| {
         assert_eq!(pw_board.map[pos.0][pos.1], '.');
         facing = facing.turn(Dir::from(turn_c));
         pos = pw_board.move_if_possible(pos, facing, steps);
@@ -164,10 +163,17 @@ type FoldMap = HashMap<((usize, usize), Dir), ((usize, usize), Dir, bool, bool)>
 struct PasswordBoard {
     map: Vec<Vec<char>>,
     fold_map: FoldMap,
+    quad_rows: usize,
+    quad_cols: usize,
 }
 
 impl PasswordBoard {
     fn new(map: &[Vec<char>]) -> Self {
+        let (quad_rows, quad_cols) = if map.len() > map[0].len() {
+            (4,3)
+        } else {
+            (3,4)
+        };
         let map = map.to_vec();
         #[cfg(test)]
         let fold_map = [
@@ -205,35 +211,35 @@ impl PasswordBoard {
         #[cfg(not(test))]
         let fold_map = [
             // from dir       to    dir   is_rev is_transposed
-            (((0,2), Up),   ((1,0), Down,  true)),
-            (((0,2), Down), ((1,2), Down,  false)),
-            (((0,2), Left), ((1,1), Down,  false)),
-            (((0,2), Right),((2,3), Left,  false)),
+            (((0,1), Up),   ((3,0), Right, false)),
+            (((0,1), Down), ((1,1), Down, false)),
+            (((0,1), Left), ((2,0), Right, true)),
+            (((0,1), Right),((0,2), Right, false)),
+
+            (((0,2), Up),   ((3,0), Up, false)),
+            (((0,2), Down), ((1,1), Left, false)),
+            (((0,2), Left), ((0,1), Left, false)),
+            (((0,2), Right),((2,1), Left, true)),
   
-            (((1,0), Up),   ((0,2), Down,  false)),
-            (((1,0), Down), ((2,2), Up,    false)),
-            (((1,0), Left), ((2,3), Up,    false)),
-            (((1,0), Right),((1,1), Right, false)),
+            (((1,1), Up),   ((0,1), Up, false)),
+            (((1,1), Down), ((2,1), Down, false)),
+            (((1,1), Left), ((2,0), Down, false)),
+            (((1,1), Right),((0,2), Up, false)),
   
-            (((1,1), Up),   ((0,2), Right, false)),
-            (((1,1), Down), ((2,2), Right, true)),
-            (((1,1), Left), ((1,0), Left,  false)),
-            (((1,1), Right),((1,2), Right, false)),
+            (((2,0), Up),   ((1,1), Right, false)),
+            (((2,0), Down), ((3,0), Down, false)),
+            (((2,0), Left), ((0,1), Right, true)),
+            (((2,0), Right),((2,1), Right, false)),
   
-            (((1,2), Up),   ((0,2), Up,    false)),
-            (((1,2), Down), ((2,2), Down,  false)),
-            (((1,2), Left), ((1,1), Left,  false)),
-            (((1,2), Right),((2,3), Down,  true)),
+            (((2,1), Up),   ((1,1), Up, false)),
+            (((2,1), Down), ((3,0), Left, false)),
+            (((2,1), Left), ((2,0), Left, false)),
+            (((2,1), Right),((0,2), Left, true)),
   
-            (((2,2), Up),   ((1,2), Up,    false)),
-            (((2,2), Down), ((1,0), Up,    true)),
-            (((2,2), Left), ((1,1), Up,    true)),
-            (((2,2), Right),((2,3), Right, false)),
-  
-            (((2,3), Up),   ((1,2), Left,  true)),
-            (((2,3), Down), ((1,0), Right, true)),
-            (((2,3), Left), ((2,2), Left,  false)),
-            (((2,3), Right),((0,2), Left,  true)),
+            (((3,0), Up),   ((2,0), Up, false)),
+            (((3,0), Down), ((0,2), Down, false)),
+            (((3,0), Left), ((0,1), Down, false)),
+            (((3,0), Right),((2,1), Up, false)),
         ];
         let fold_map: FoldMap = fold_map.to_vec().into_iter()
         .map(|((from_q,from_dir),(to_q,to_dir,to_rev))| {
@@ -262,7 +268,7 @@ impl PasswordBoard {
         assert_eq!(0, quad_cnts.values().filter(|cnt|**cnt!=4).count());
         println!("{:?}",dir_cnts);
         assert_eq!(4, dir_cnts.values().filter(|cnt|**cnt==6).count());  // Every DIR should be specified exactly 6 times
-        PasswordBoard { map, fold_map }
+        PasswordBoard { map, fold_map, quad_rows, quad_cols }
     }
 
     fn map_c(&self, pos: (usize, usize)) -> char {
@@ -309,8 +315,8 @@ impl PasswordBoard {
     }
 
     fn next_pos_3d(&self, pos: (usize, usize), facing: Dir) -> ((usize, usize), Dir) {
-        let quad_size = self.map.len() / 3;
-        assert_eq!(quad_size, self.map[0].len() / 4);
+        let quad_size = self.map.len() / self.quad_rows;
+        assert_eq!(quad_size, self.map[0].len() / self.quad_cols);
         let qmax = quad_size-1;
         // If we're not moving around an edge, processing is 2D, simple.
         // If we _are_ moving around an edge (in unwrapped 3-space) then a LOT changes!!
@@ -372,12 +378,12 @@ impl PasswordBoard {
 
     // Given quadrant = (abs_pos.0 / quad_size, abs_pos.1 / quad_size), this is the reverse;
     fn abs_pos(&self, rel_pos: (usize, usize), quad: (usize, usize)) -> (usize, usize) {
-        assert!(quad.0 < 3);
-        assert!(quad.1 < 4);
+        assert!(quad.0 < self.quad_rows);
+        assert!(quad.1 < self.quad_cols);
         let abs_rows = self.map.len();
         let abs_cols = self.map[0].len();
-        let quad_size = abs_rows / 3;
-        assert_eq!(abs_cols / 4, quad_size);
+        let quad_size = abs_rows / self.quad_rows;
+        assert_eq!(abs_cols / self.quad_cols, quad_size);
         assert!(rel_pos.0 < quad_size);
         assert!(rel_pos.1 < quad_size);
         
