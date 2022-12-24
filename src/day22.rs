@@ -91,9 +91,11 @@ pub fn part2(input: &(Vec<Vec<char>>, String)) -> usize {
     let moves = prefixed_dirs.zip(just_nums.iter()).collect::<Vec<_>>();
 
     let mut facing = Right;
+    #[cfg(test)]
     let mut pos = pw_board.abs_pos((0,0), (0,2));
+    #[cfg(not(test))]
+    let mut pos = pw_board.abs_pos((0,0), (0,1));
     assert_eq!(pw_board.map_c(pos), '.');
-    assert_eq!(pos, (0,pw_board.map[0].len()/4*2));
     facing = facing.turn(Left); // Anticipate extra Right turn we added at start, above
 
     #[cfg(test)]
@@ -263,10 +265,8 @@ impl PasswordBoard {
             h.entry(dir).and_modify(|c: &mut u8| *c += 1).or_insert(1);
             h 
         });
-        println!("quad_cnts: {:?}",quad_cnts);
         assert_eq!(6, quad_cnts.values().filter(|cnt|**cnt==4).count()); // All 6 quadrants should be entered from all 4 sides
         assert_eq!(0, quad_cnts.values().filter(|cnt|**cnt!=4).count());
-        println!("{:?}",dir_cnts);
         assert_eq!(4, dir_cnts.values().filter(|cnt|**cnt==6).count());  // Every DIR should be specified exactly 6 times
         PasswordBoard { map, fold_map, quad_rows, quad_cols }
     }
@@ -292,7 +292,7 @@ impl PasswordBoard {
     } 
 
     fn move_if_possible(&self, mut pos: (usize, usize), facing: Dir, steps: usize) -> (usize, usize) {
-        let dbg = false;
+        let dbg = cfg!(test);
         let mut next_p = self.next_pos(pos, facing);
         for _step in 0..steps {
             if dbg {println!("pos could be {:?}", next_p);}
@@ -359,7 +359,7 @@ impl PasswordBoard {
     }
 
     fn move_in_3d(&self, mut pos: (usize, usize), mut facing: Dir, steps: usize) -> ((usize, usize), Dir) {
-        let dbg = true;
+        let dbg = cfg!(test);
         let (mut next_p, mut next_f) = self.next_pos_3d(pos, facing);
         for _step in 0..steps {
             if dbg {println!("pos could be {:?} in quadrant {:?}", next_p, self.quadrant(next_p));}
