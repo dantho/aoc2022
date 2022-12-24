@@ -1,4 +1,4 @@
-use std::{iter::{self, once, repeat}, fmt::Display};
+use std::{iter::{self, once, repeat}, fmt::Display, collections::{HashMap, hash_map}};
 
 /// https://adventofcode.com/2022/day/22
 /// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786
@@ -32,7 +32,7 @@ pub fn gen1(input: &str) -> (Vec<Vec<char>>, String) {
 #[aoc(day22, part1)]
 pub fn part1(input: &(Vec<Vec<char>>, String)) -> usize {
     let (raw_map, movement) = input;
-    let pw_board = PasswordBoard { map: raw_map.to_vec() };
+    let pw_board = PasswordBoard::new(raw_map);
     let just_nums: Vec<usize> = movement.chars()
         .map(|c| if c.is_numeric() {c} else {' '})
         .collect::<String>().split(' ')
@@ -78,7 +78,7 @@ pub fn part2(input: &(Vec<Vec<char>>, String)) -> usize {
         println!("{}) {}", i+1, input.0[0].len());
     }
     let (raw_map, movement) = input;
-    let pw_board = PasswordBoard { map: raw_map.to_vec() };
+    let pw_board = PasswordBoard::new(raw_map);
     let just_nums: Vec<usize> = movement.chars()
         .map(|c| if c.is_numeric() {c} else {' '})
         .collect::<String>().split(' ')
@@ -123,7 +123,7 @@ pub fn part2(input: &(Vec<Vec<char>>, String)) -> usize {
 }
 
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 enum Dir {
     Right = 0,
     Down = 1,
@@ -149,14 +149,6 @@ impl Dir {
             _ => panic!("Only left or right turns expected."),
         }
     }
-    fn rev(&self) -> Dir {
-        match self {
-            Right => Left,
-            Left => Right,
-            Down => Up,
-            Up => Down,
-        }
-    }
 }
 
 impl From<char> for Dir {
@@ -173,9 +165,81 @@ impl From<char> for Dir {
 
 struct PasswordBoard {
     map: Vec<Vec<char>>,
+    fold_map: HashMap<((usize, usize), Dir), ((usize, usize), Dir, bool, bool)>,
 }
 
 impl PasswordBoard {
+    fn new(map: &[Vec<char>]) -> Self {
+        let map = map.to_vec();
+        // #[cfg(test)]
+        let fold_map = HashMap::from([
+            (((0,2),Up),   ((1,0),Down,true, false)),
+            (((0,2),Down), ((1,2),Down,false, false)),
+            (((0,2),Left), ((1,1),Down,false, true)),
+            (((0,2),Right),((2,3),Left,false, true)),
+
+            (((1,0),Up),   ((0,2),Down,false, false)),
+            (((1,0),Down), ((2,2),Up,false, false)),
+            (((1,0),Left), ((2,3),Up,false, true)),
+            (((1,0),Right),((1,1),Right,false, true)),
+
+            (((1,1),Up),   ((0,2),Right,false, true)),
+            (((1,1),Down), ((2,2),Right,true, true)),
+            (((1,1),Left), ((1,0),Left,false, false)),
+            (((1,1),Right),((1,2),Right,false, false)),
+
+            (((1,2),Up),   ((0,2),Right,false, false)),
+            (((1,2),Down), ((2,2),Right,false, false)),
+            (((1,2),Left), ((1,1),Left,true, false)),
+            (((1,2),Right),((2,3),Right,true, true)),
+
+            (((2,2),Up),   ((1,2),Up,false, false)),
+            (((2,2),Down), ((1,0),Down,true, false)),
+            (((2,2),Left), ((1,1),Left,true, true)),
+            (((2,2),Right),((2,3),Down,false, false)),
+
+            (((2,3),Up),   ((1,2),Up,true, true)),
+            (((2,3),Down), ((1,0),Up,true, true)),
+            (((2,3),Left), ((2,2),Up,false, false)),
+            (((2,3),Right),((0,2),Right,true, false)),
+        ]);
+        // #[not(cfg(test))]
+        // let fold_map = HashMap::from([
+        //     (((0,2),Up),((),DDIIRR,false,false)),
+        //     (((0,2),Down),((),DDIIRR,false,false)),
+        //     (((0,2),Left),((),DDIIRR,false,false)),
+        //     (((0,2),Right),((),DDIIRR,false,false)),
+        //     (((1,0),Up),((),DDIIRR,false,false)),
+        //     (((1,0),Down),((),DDIIRR,false,false)),
+        //     (((1,0),Left),((),DDIIRR,false,false)),
+        //     (((1,0),Right),((),DDIIRR,false,false)),
+        //     (((1,1),Up),((),DDIIRR,false,false)),
+        //     (((1,1),Down),((),DDIIRR,false,false)),
+        //     (((1,1),Left),((),DDIIRR,false,false)),
+        //     (((1,1),Right),((),DDIIRR,false,false)),
+        //     (((2,2),Up),((),DDIIRR,false,false)),
+        //     (((2,2),Down),((),DDIIRR,false,false)),
+        //     (((2,2),Left),((),DDIIRR,false,false)),
+        //     (((2,2),Right),((),DDIIRR,false,false)),
+        //     (((2,3),Up),((),DDIIRR,false,false)),
+        //     (((2,3),Down),((),DDIIRR,false,false)),
+        //     (((2,3),Left),((),DDIIRR,false,false)),
+        //     (((2,3),Right),((),DDIIRR,false,false)),
+        // ]);
+
+        // Above maps are manually entered and determined by inspection
+        // in 3-space with folded paper.  This is an error-prone process.
+        // Fortunately, due to symmetries, we can perform many checks:
+        let quad_cnts = fold_map.iter().fold(HashMap::new(),|mut h,(_,(quad,_,_,_))| {
+            h.entry(quad).and_modify(|c: &mut u8| *c += 1);
+            h 
+        });
+        assert_eq!(6, quad_cnts.values().filter(|c|**c==4).count());
+        assert_eq!(0, quad_cnts.values().filter(|c|**c!=4).count());
+
+        PasswordBoard { map, fold_map }
+    }
+
     fn map_c(&self, pos: (usize, usize)) -> char {
         self.map[pos.0][pos.1]
     }
@@ -215,10 +279,8 @@ impl PasswordBoard {
     }
 
     fn next_pos_3d(&self, pos: (usize, usize), facing: Dir) -> ((usize, usize), Dir) {
-        let meta_rows = self.map.len();
-        let meta_cols = self.map[0].len();
-        let quad_size = meta_rows / 3;
-        assert_eq!(quad_size, meta_cols / 4);
+        let quad_size = self.map.len() / 3;
+        assert_eq!(quad_size, self.map[0].len() / 4);
         let qmax = quad_size-1;
         // If we're not moving around an edge, processing is 2D, simple.
         // If we _are_ moving around an edge (in unwrapped 3-space) then a LOT changes!!
@@ -231,56 +293,31 @@ impl PasswordBoard {
             || facing == Left && qpos.1 == 0
             || facing == Right && qpos.1 == qmax;
         if !edge_detected {
-            (match facing {
+            let new_pos = match facing {
                 Right => self.abs_pos((qpos.0, qpos.1 + 1), quadrant),
                 Down  => self.abs_pos((qpos.0 + 1, qpos.1), quadrant),
                 Left  => self.abs_pos((qpos.0, qpos.1 - 1), quadrant),
                 Up    => self.abs_pos((qpos.0 - 1, qpos.1), quadrant),
-            }, facing)
+            };
+            (new_pos, facing)
         } else {
             // Edge transition logic.  Warning!
             // See Part 2 here, https://adventofcode.com/2022/day/22, to comprehend unwrapped 3-space
             // We are in COMPLEX land here -- interpretting an unwrapped map in 3-space as a folded cube!
-            let (new_pos, new_facing) = match quadrant {
-                // Inner match loops take advantage of edge_detected pre-knowledge of pos (see above)
-                (0,2) => match facing {
-                    Up => (self.abs_pos((0, qmax-qpos.1), (1,0)), facing.rev()),
-                    Down => (self.abs_pos((0, qpos.1), (1,2)), facing),
-                    Left => (self.abs_pos((0, qpos.0), (1,1)), Down),
-                    Right => (self.abs_pos((qpos.0, qmax), (2,3)), Left),
-                },
-                (1,0) => match facing {
-                    Up => (self.abs_pos((0, qpos.1), (0,2)), facing.rev()),
-                    Down => (self.abs_pos((qmax, qpos.1), (2,2)), facing.rev()),
-                    Left => (self.abs_pos((qmax, qpos.0), (2,3)), Up),
-                    Right => (self.abs_pos((qpos.0, 0), (1,1)), facing),
-                },
-                (1,1) => match facing {
-                    Up => (self.abs_pos((qpos.1, 0), (0,2)), Right),
-                    Down => (self.abs_pos((qmax-qpos.1, 0), (2,2)), Right),
-                    Left => (self.abs_pos((qpos.0, qmax), (1,0)), facing),
-                    Right => (self.abs_pos((qpos.0, 0), (1,2)), facing),
-                },
-                (1,2) => match facing {
-                    Up => (self.abs_pos((qmax, qpos.1), (0,2)), facing),
-                    Down => (self.abs_pos((0, qpos.1), (2,2)), facing),
-                    Left => (self.abs_pos((qpos.0, qmax-qpos.0), (1,1)), facing),
-                    Right => (self.abs_pos((0, qmax-qpos.0), (2,3)), Down),
-                },
-                (2,2) => match facing {
-                    Up => (self.abs_pos((qmax, qpos.1), (1,2)), facing),
-                    Down => (self.abs_pos((qmax, qmax-qpos.1), (1,0)), facing.rev()),
-                    Left => (self.abs_pos((qmax, qmax-qpos.0), (1,1)), Up),
-                    Right => (self.abs_pos((qpos.0, 0), (2,3)), facing),
-                },
-                (2,3) => match facing {
-                    Up => (self.abs_pos((qmax-qpos.1, qmax), (1,2)), Left),
-                    Down => (self.abs_pos((qmax-qpos.1, 0), (1,0)), Right),
-                    Left => (self.abs_pos((qpos.0, qmax), (2,2)), facing),
-                    Right => (self.abs_pos((qmax-qpos.0,qmax), (0,2)), Left),
-                },
-                bad => {panic!("Shouldn't get quandrant {:?} from positon {:?}", bad, pos);},
-            };
+            let (new_quadrant, new_facing, is_reversed, is_transposed) = self.fold_map[&(quadrant, facing)];
+            let qpos = if is_reversed {
+                (qmax-1-qpos.0,qmax-1-qpos.1)
+            } else {qpos};
+            let qpos = if is_transposed {
+                (qpos.1, qpos.0)
+            } else {qpos};
+            let new_qpos = match new_facing {
+                    Up => (qmax, qpos.1),
+                    Down => (0, qpos.1),
+                    Left => (qpos.0, qmax),
+                    Right => (qpos.0, 0),
+                };
+            let new_pos = self.abs_pos(new_qpos, new_quadrant);
             (new_pos, new_facing)
         }
     }
