@@ -29,5 +29,5 @@ Teradyne private [Leaderboard](https://adventofcode.com/2022/leaderboard/private
 | [21: Monkey Math](https://adventofcode.com/2022/day/21) |  |  |
 | [22: Monkey Map](https://adventofcode.com/2022/day/22) |  |  |
 | [23: Unstable Diffusion](https://adventofcode.com/2022/day/23) |  |  |
-| [24: ](https://adventofcode.com/2022/day/24) |  |  |
+| [24: Blizzard Basin](https://adventofcode.com/2022/day/24) |  |  |
 | [25: ](https://adventofcode.com/2022/day/25) |  |  |
