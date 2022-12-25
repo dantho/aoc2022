@@ -7,35 +7,57 @@
 // extern crate regex;
 // use self::regex::{Captures, Regex};
 
+pub struct Valley {
+    map: Vec<Vec<char>>,
+    north: Vec<(usize, usize)>,
+    east:  Vec<(usize, usize)>,
+    south: Vec<(usize, usize)>,
+    west:  Vec<(usize, usize)>,
+}
 // ********************
 // *** Generator(s) ***
 // ********************/
 #[aoc_generator(day24)]
-pub fn gen1(input: &str) -> Vec<Vec<u32>> {
-    let mut elf = Vec::<u32>::new();
-    let mut elves = Vec::new();
-    for line in input.lines() {
-        if line == "" {
-            elves.push(elf);
-            elf = Vec::new();
-        } else {
-            elf.push(line.parse().unwrap());
+pub fn gen1(input: &str) -> Valley {
+    let mut north = Vec::new();
+    let mut east = Vec::new();
+    let mut south = Vec::new();
+    let mut west = Vec::new();
+    let map: Vec<Vec<char>> = input.lines()
+        .map(|line|line.chars().collect()).collect();
+    for y in 0..map.len() {
+        for x in 0..map[0].len() {
+            match map[y][x] {
+                '^' => north.push((y,x)),
+                '>' => east.push((y,x)),
+                'v' => south.push((y,x)),
+                '<' => west.push((y,x)),
+                _ => (),
+            }
         }
     }
-    elves.push(elf);
-    elves
+    let map = map.iter().map(|row|row.iter().map(|c| match c {
+        '^' | '>' | 'v' | '<' => '.',
+        other => *other,
+    }).collect()).collect();
+
+    Valley { map, north, east, south, west }
+
 }
 
 // *********************
 // *** Part1 & Part2 ***
 // *********************
 #[aoc(day24, part1)]
-pub fn part1(input: &Vec<Vec<u32>>) -> u32 {
-    input
-        .iter()
-        .map(|elf| elf.iter().fold(0, |sum, item| sum + item))
-        .max()
-        .unwrap()
+pub fn part1(input: &Valley) -> u32 {
+    // after every minute, consider every position,
+    // Eliminate positions with blizzards on them
+    // Eliminate positions not-adjacent or coincident with a prior position
+    // All remaining positions are valid
+    // Continue until one available position is END position.
+    let mut valley: Valley = *input;
+    let valley.north = valley.north;
+    999
 }
 
 // *************
@@ -47,7 +69,7 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        assert_eq!(part1(&gen1(EX1)), 24000);
+        assert_eq!(part1(&gen1(EX1)), 18);
     }
 
     // #[test]
@@ -55,18 +77,11 @@ mod tests {
     //     assert_eq!(part2(&gen1(EX1)), 45000);
     // }
 
-    const EX1: &'static str = r"1000
-2000
-3000
-
-4000
-
-5000
-6000
-
-7000
-8000
-9000
-
-10000";
+    const EX1: &'static str =
+r"#.######
+#>>.<^<#
+#.<..<<#
+#>v.><>#
+#<^v^^>#
+######.#";
 }
