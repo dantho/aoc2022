@@ -7,42 +7,78 @@
 // extern crate regex;
 // use self::regex::{Captures, Regex};
 
+use std::{collections::HashSet, iter::once};
+
+#[derive(Clone ,Debug)]
 pub struct Valley {
-    map: Vec<Vec<char>>,
     north: Vec<(usize, usize)>,
     east:  Vec<(usize, usize)>,
     south: Vec<(usize, usize)>,
     west:  Vec<(usize, usize)>,
+    ymax: usize,
+    xmax: usize,
+    start: (usize, usize),
+    end: (usize, usize)
 }
+
+impl Valley {
+    fn new(map_with_blizzards: &[Vec<char>]) -> Self {
+        let mut north = Vec::new();
+        let mut east = Vec::new();
+        let mut south = Vec::new();
+        let mut west = Vec::new();
+        for y in 0..map_with_blizzards.len() {
+            for x in 0..map_with_blizzards[0].len() {
+                match map_with_blizzards[y][x] {
+                    '^' => north.push((y,x)),
+                    '>' => east.push((y,x)),
+                    'v' => south.push((y,x)),
+                    '<' => west.push((y,x)),
+                    _ => (),
+                }
+            }
+        }
+        let ymax = map_with_blizzards.len()-2;
+        let xmax = map_with_blizzards[0].len()-2;
+    
+        Valley { north, east, south, west, ymax, xmax, start: (0,1), end: (ymax+1, xmax)}
+
+    }
+
+    fn time_step(&mut self) {
+        self.north = self.north.iter()
+            .map(|(y,x)| (if (y-1) == 0 {self.ymax} else {y-1}, *x))
+            .collect();
+        self.west = self.west.iter()
+            .map(|(y,x)| (*y, if (x-1) == 0 {self.xmax} else {x-1}))
+            .collect();
+        self.south = self.south.iter()
+            .map(|(y,x)| (if (y+1) <= self.ymax {y+1} else {1}, *x))
+            .collect();
+        self.east = self.east.iter()
+            .map(|(y,x)| (*y, if (x+1) <= self.xmax {x+1} else {1}))
+            .collect();
+    }
+
+    fn blizzards(&self) -> HashSet<(usize, usize)> {
+        self.north.iter()
+        .chain(self.south.iter())
+        .chain(self.east.iter())
+        .chain(self.west.iter())
+        .map(|p|*p)
+        .collect()
+    }
+
+}
+
 // ********************
 // *** Generator(s) ***
 // ********************/
 #[aoc_generator(day24)]
 pub fn gen1(input: &str) -> Valley {
-    let mut north = Vec::new();
-    let mut east = Vec::new();
-    let mut south = Vec::new();
-    let mut west = Vec::new();
     let map: Vec<Vec<char>> = input.lines()
         .map(|line|line.chars().collect()).collect();
-    for y in 0..map.len() {
-        for x in 0..map[0].len() {
-            match map[y][x] {
-                '^' => north.push((y,x)),
-                '>' => east.push((y,x)),
-                'v' => south.push((y,x)),
-                '<' => west.push((y,x)),
-                _ => (),
-            }
-        }
-    }
-    let map = map.iter().map(|row|row.iter().map(|c| match c {
-        '^' | '>' | 'v' | '<' => '.',
-        other => *other,
-    }).collect()).collect();
-
-    Valley { map, north, east, south, west }
-
+    Valley::new(&map)
 }
 
 // *********************
@@ -54,10 +90,28 @@ pub fn part1(input: &Valley) -> u32 {
     // Eliminate positions with blizzards on them
     // Eliminate positions not-adjacent or coincident with a prior position
     // All remaining positions are valid
-    // Continue until one available position is END position.
-    let mut valley: Valley = *input;
-    let valley.north = valley.north;
-    999
+    // Continue until an available position is END position.
+    let mut valley = input.clone();
+    let mut explore = HashSet::new();
+    let mut minutes = 0;
+
+    while !explore.contains(&valley.end) {
+        minutes += 1;
+        valley.time_step();
+        // move explore list to newly available and adjacent positions
+        explore = explore.into_iter().map(|(y,x)| [(y,x),(y-1,x),(y+1,x),(y,x-1),(y,x+1)].to_vec().into_iter())
+        .flatten().chain(once((valley.start.0+1,valley.start.1)))
+        .filter_map(|p| match p {
+            e if e == valley.end => Some(e),
+            (toobig,_) if toobig == valley.ymax+1 => None,
+            (_,toobig) if toobig == valley.xmax+1 => None,
+            (0,_) => None,
+            (_,0) => None,
+            other => Some(other),
+        })
+        .filter(|p| !valley.blizzards().contains(p)).collect();
+    }
+    minutes
 }
 
 // *************
