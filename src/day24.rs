@@ -1,11 +1,6 @@
 /// https://adventofcode.com/2022/day/24
 /// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786
 /// TER: https://adventofcode.com/2022/leaderboard/private/view/951754
-///
-/// https://docs.rs/regex/1.4.2/regex/
-/// https://docs.rs/regex/1.4.2/regex/#syntax
-// extern crate regex;
-// use self::regex::{Captures, Regex};
 
 use std::{collections::HashSet, iter::once};
 
@@ -100,11 +95,11 @@ pub fn part1(input: &Valley) -> u32 {
         valley.time_step();
         // move explore list to newly available and adjacent positions
         explore = explore.into_iter().map(|(y,x)| [(y,x),(y-1,x),(y+1,x),(y,x-1),(y,x+1)].to_vec().into_iter())
-        .flatten().chain(once((valley.start.0+1,valley.start.1)))
+        .flatten().chain(once((1,1)))
         .filter_map(|p| match p {
-            e if e == valley.end => Some(e),
-            (toobig,_) if toobig == valley.ymax+1 => None,
-            (_,toobig) if toobig == valley.xmax+1 => None,
+            end if end == valley.end => Some(end),  // This will terminate the loop
+            (toobig,_) if toobig > valley.ymax => None,
+            (_,toobig) if toobig > valley.xmax => None,
             (0,_) => None,
             (_,0) => None,
             other => Some(other),
@@ -113,6 +108,71 @@ pub fn part1(input: &Valley) -> u32 {
     }
     minutes
 }
+
+#[aoc(day24, part2)]
+pub fn part2(input: &Valley) -> u32 {
+    // after every minute, consider every position,
+    // Eliminate positions with blizzards on them
+    // Eliminate positions not-adjacent or coincident with a prior position
+    // All remaining positions are valid
+    // Continue until an available position is END position.
+    let mut valley = input.clone();
+    let mut explore = HashSet::new();
+    let mut minutes = 0;
+
+    while !explore.contains(&valley.end) {
+        minutes += 1;
+        valley.time_step();
+        // move explore list to newly available and adjacent positions
+        explore = explore.into_iter().map(|(y,x)| [(y,x),(y-1,x),(y+1,x),(y,x-1),(y,x+1)].to_vec().into_iter())
+        .flatten().chain(once((1,1)))
+        .filter_map(|p| match p {
+            end if end == valley.end => Some(end),  // This will terminate the loop
+            (toobig,_) if toobig > valley.ymax => None,
+            (_,toobig) if toobig > valley.xmax => None,
+            (0,_) => None,
+            (_,0) => None,
+            other => Some(other),
+        })
+        .filter(|p| !valley.blizzards().contains(p)).collect();
+    }
+    explore = HashSet::new();
+    while !explore.contains(&valley.start) {
+        minutes += 1;
+        valley.time_step();
+        // move explore list to newly available and adjacent positions
+        explore = explore.into_iter().map(|(y,x)| [(y,x),(y-1,x),(y+1,x),(y,x-1),(y,x+1)].to_vec().into_iter())
+        .flatten().chain(once((valley.ymax,valley.xmax)))
+        .filter_map(|p| match p {
+            start if start == valley.start => Some(start),  // This will terminate the loop
+            (toobig,_) if toobig > valley.ymax => None,
+            (_,toobig) if toobig > valley.xmax => None,
+            (0,_) => None,
+            (_,0) => None,
+            other => Some(other),
+        })
+        .filter(|p| !valley.blizzards().contains(p)).collect();
+    }
+    explore = HashSet::new();
+    while !explore.contains(&valley.end) {
+        minutes += 1;
+        valley.time_step();
+        // move explore list to newly available and adjacent positions
+        explore = explore.into_iter().map(|(y,x)| [(y,x),(y-1,x),(y+1,x),(y,x-1),(y,x+1)].to_vec().into_iter())
+        .flatten().chain(once((1,1)))
+        .filter_map(|p| match p {
+            end if end == valley.end => Some(end),  // This will terminate the loop
+            (toobig,_) if toobig > valley.ymax => None,
+            (_,toobig) if toobig > valley.xmax => None,
+            (0,_) => None,
+            (_,0) => None,
+            other => Some(other),
+        })
+        .filter(|p| !valley.blizzards().contains(p)).collect();
+    }
+    minutes
+}
+
 
 // *************
 // *** Tests ***
@@ -126,10 +186,10 @@ mod tests {
         assert_eq!(part1(&gen1(EX1)), 18);
     }
 
-    // #[test]
-    // fn test_ex1_part2() {
-    //     assert_eq!(part2(&gen1(EX1)), 45000);
-    // }
+    #[test]
+    fn test_ex1_part2() {
+        assert_eq!(part2(&gen1(EX1)), 54);
+    }
 
     const EX1: &'static str =
 r"#.######
