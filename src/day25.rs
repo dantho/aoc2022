@@ -8,14 +8,38 @@
 // use self::regex::{Captures, Regex};
 
 use std::fmt::Display;
-use crate::day25::Snafu::*;
+use crate::day25::SnafuDigit::*;
 
-#[derive(Debug, Clone)]
-pub struct SnafuNum {
-    snafs: Vec<Snafu>,
+
+// ********************
+// *** Generator(s) ***
+// ********************/
+#[aoc_generator(day25)]
+pub fn gen1(input: &str) -> Vec<Snafu> {
+    input.lines().map(|line|Snafu::from(line)).collect()
 }
 
-impl Display for SnafuNum {
+// *********************
+// *** Part1 & Part2 ***
+// *********************
+#[aoc(day25, part1)]
+pub fn part1(input: &[Snafu]) -> String {
+    Snafu::from(input.iter().fold(0, |sum, sf| sum + i64::from(sf))).to_string()
+}
+
+#[derive(Debug, Clone)]
+pub struct Snafu {
+    snafs: Vec<SnafuDigit>,
+}
+
+impl Snafu {
+    fn new() -> Self {
+        Snafu { snafs: Vec::new() }
+    }
+}
+
+
+impl Display for Snafu {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut num = String::new();
         for dig in &self.snafs {
@@ -26,18 +50,62 @@ impl Display for SnafuNum {
     }
 }
 
-impl From<&str> for SnafuNum {
+impl From<&str> for Snafu {
     fn from(s: &str) -> Self {
         let mut num = Vec::new();
         for c in s.chars() {
-            num.push(Snafu::from(c));
+            num.push(SnafuDigit::from(c));
         }
-        SnafuNum { snafs: num }
+        Snafu { snafs: num }
+    }
+}
+
+impl From<i64> for Snafu {
+    fn from(mut n: i64) -> Snafu {
+        let mut sf = Snafu::new();
+        let mut carry = 0;
+        while n > 0 || carry > 0 {
+            let sdig = match (n + carry) % 5 {
+                4 => {
+                    carry = 1;
+                    MinusOne
+                },
+                3 => {
+                    carry = 1;
+                    MinusTwo
+                },
+                2 => {
+                    carry = 0;
+                    Two
+                },
+                1 => {
+                    carry = 0;
+                    One
+                },
+                0 => {
+                    // carry = 0;
+                    Zero
+                },
+                _ => panic!("Can't happen."),
+            };
+            sf.snafs.push(sdig);
+            n /= 5;
+        }
+        sf.snafs.reverse();
+        sf
+    }
+}
+
+impl From<&Snafu> for i64 {
+    fn from(sf: &Snafu) -> Self {
+        sf.snafs.iter().fold(0,|dec, sfdig| {
+            dec * 5 + *sfdig as i64
+        })
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Snafu {
+pub enum SnafuDigit {
     Two = 2,
     One = 1,
     Zero = 0,
@@ -45,7 +113,7 @@ pub enum Snafu {
     MinusTwo = -2
 }
 
-impl Snafu {
+impl SnafuDigit {
     fn to_char(&self) -> char {
         match self {
             Two => '2',
@@ -57,7 +125,7 @@ impl Snafu {
     }
 }
 
-impl From<char> for Snafu {
+impl From<char> for SnafuDigit {
     fn from(c: char) -> Self {
         match c {
             '2' => Two,
@@ -65,88 +133,65 @@ impl From<char> for Snafu {
             '0' => Zero,
             '-' => MinusOne,
             '=' => MinusTwo,
-            bad => panic!("Bad Snafu char: '{}'", bad)
+            bad => panic!("Bad SnafuDigit char: '{}'", bad)
         }
     }
-}
-
-// ********************
-// *** Generator(s) ***
-// ********************/
-#[aoc_generator(day25)]
-pub fn gen1(input: &str) -> Vec<Vec<u32>> {
-    let mut elf = Vec::<u32>::new();
-    let mut elves = Vec::new();
-    for line in input.lines() {
-        if line == "" {
-            elves.push(elf);
-            elf = Vec::new();
-        } else {
-            elf.push(line.parse().unwrap());
-        }
-    }
-    elves.push(elf);
-    elves
-}
-
-// *********************
-// *** Part1 & Part2 ***
-// *********************
-#[aoc(day25, part1)]
-pub fn part1(input: &Vec<Vec<u32>>) -> u32 {
-    input
-        .iter()
-        .map(|elf| elf.iter().fold(0, |sum, item| sum + item))
-        .max()
-        .unwrap()
-}
-
-#[aoc(day25, part2)]
-pub fn part2(input: &Vec<Vec<u32>>) -> u32 {
-    let mut calories: Vec<u32> = input
-        .iter()
-        .map(|elf| elf.iter().fold(0, |sum, item| sum + item))
-        .collect();
-    calories.sort();
-    calories.reverse();
-    calories.iter().take(3).sum()
 }
 
 // *************
 // *** Tests ***
 // *************
-#[test]
-fn test_SNAFU() {
-    //         Decimal     SNAFU
-    assert_eq!(1        .  SnafuNum::from("1").to_decimal);
-    assert_eq!(2        .  SnafuNum::from("2").to_decimal);
-    assert_eq!(3        .  SnafuNum::from("1=").to_decimal);
-    assert_eq!(4        .  SnafuNum::from("1-").to_decimal);
-    assert_eq!(5        .  SnafuNum::from("10").to_decimal);
-    assert_eq!(6        .  SnafuNum::from("11").to_decimal);
-    assert_eq!(7        .  SnafuNum::from("12").to_decimal);
-    assert_eq!(8        .  SnafuNum::from("2=").to_decimal);
-    assert_eq!(9        .  SnafuNum::from("2-").to_decimal);
-    assert_eq!(10       .  SnafuNum::from("20").to_decimal);
-    assert_eq!(15       .  SnafuNum::from("1=0").to_decimal);
-    assert_eq!(20       .  SnafuNum::from("1-0").to_decimal);
-    assert_eq!(2022     .  SnafuNum::from("1=11-2").to_decimal);
-    assert_eq!(12345    .  SnafuNum::from("1-0---0").to_decimal);
-    assert_eq!(314159265.  SnafuNum::from("1121-1110-1=0").to_decimal);
-}
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
+    fn test_snafudigit() {
+                // Decimal     SnafuDigit
+        assert_eq!(1        ,  i64::from(&Snafu::from("1")));
+        assert_eq!(2        ,  i64::from(&Snafu::from("2")));
+        assert_eq!(3        ,  i64::from(&Snafu::from("1=")));
+        assert_eq!(4        ,  i64::from(&Snafu::from("1-")));
+        assert_eq!(5        ,  i64::from(&Snafu::from("10")));
+        assert_eq!(6        ,  i64::from(&Snafu::from("11")));
+        assert_eq!(7        ,  i64::from(&Snafu::from("12")));
+        assert_eq!(8        ,  i64::from(&Snafu::from("2=")));
+        assert_eq!(9        ,  i64::from(&Snafu::from("2-")));
+        assert_eq!(10       ,  i64::from(&Snafu::from("20")));
+        assert_eq!(15       ,  i64::from(&Snafu::from("1=0")));
+        assert_eq!(20       ,  i64::from(&Snafu::from("1-0")));
+        assert_eq!(2022     ,  i64::from(&Snafu::from("1=11-2")));
+        assert_eq!(12345    ,  i64::from(&Snafu::from("1-0---0")));
+        assert_eq!(314159265,  i64::from(&Snafu::from("1121-1110-1=0")));
+    }
+    #[test]
+    fn test_snafudigit2() {
+        //                     Decimal                 SnafuDigit
+        assert_eq!(Snafu::from(1        ).to_string(), "1");
+        assert_eq!(Snafu::from(2        ).to_string(), "2");
+        assert_eq!(Snafu::from(3        ).to_string(), "1=");
+        assert_eq!(Snafu::from(4        ).to_string(), "1-");
+        assert_eq!(Snafu::from(5        ).to_string(), "10");
+        assert_eq!(Snafu::from(6        ).to_string(), "11");
+        assert_eq!(Snafu::from(7        ).to_string(), "12");
+        assert_eq!(Snafu::from(8        ).to_string(), "2=");
+        assert_eq!(Snafu::from(9        ).to_string(), "2-");
+        assert_eq!(Snafu::from(10       ).to_string(), "20");
+        assert_eq!(Snafu::from(15       ).to_string(), "1=0");
+        assert_eq!(Snafu::from(20       ).to_string(), "1-0");
+        assert_eq!(Snafu::from(2022     ).to_string(), "1=11-2");
+        assert_eq!(Snafu::from(12345    ).to_string(), "1-0---0");
+        assert_eq!(Snafu::from(314159265).to_string(), "1121-1110-1=0");
+    }
+    #[test]
     fn test_ex1_part1() {
-        assert_eq!(part1(&gen1(EX1)), 24000);
+        assert_eq!(part1(&gen1(EX1)), "2=-1=0".to_string());
     }
 
-    #[test]
-    fn test_ex1_part2() {
-        assert_eq!(part2(&gen1(EX1)), 45000);
-    }
+    // #[test]
+    // fn test_ex1_part2() {
+    //     assert_eq!(part2(&gen1(EX1)), 45000);
+    // }
 
     const EX1: &'static str = r"1=-0-2
 12111

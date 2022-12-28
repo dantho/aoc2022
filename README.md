@@ -30,4 +30,4 @@ Teradyne private [Leaderboard](https://adventofcode.com/2022/leaderboard/private
 | [22: Monkey Map](https://adventofcode.com/2022/day/22) |⭐⭐| Part 1 is weird with space on map.  Part 2 is brutal with the extra complexity folded in (pun intended). ~2 days effort!|
 | [23: Unstable Diffusion](https://adventofcode.com/2022/day/23) ||  |
 | [24: Blizzard Basin](https://adventofcode.com/2022/day/24) |⭐⭐| 4 variants of blizzard treated as groups, move anywhere possible from all possible positions so far.  Done as soon as you reach the end. |
-| [25: Full of Hot Air](https://adventofcode.com/2022/day/25) |  |  |
+| [25: Full of Hot Air](https://adventofcode.com/2022/day/25) |⭐| Snafu numbers (like Roman numerals) |
