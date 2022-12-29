@@ -1,6 +1,6 @@
 /// https://adventofcode.com/2022/day/22
-/// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786
-/// TER: https://adventofcode.com/2022/leaderboard/private/view/951754
+/// DAN AoC: https://adventofcode.com/2022/leaderboard/private/view/380786
+/// HLOTYAK: https://adventofcode.com/2022/leaderboard/private/view/951754
 use crate::day22::Dir::*;
 use std::iter::{once, repeat};
 use std::fmt::Display;

@@ -1,6 +1,6 @@
 /// https://adventofcode.com/2022/day/23
-/// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786
-/// TER: https://adventofcode.com/2022/leaderboard/private/view/951754
+/// DAN AoC: https://adventofcode.com/2022/leaderboard/private/view/380786
+/// HLOTYAK: https://adventofcode.com/2022/leaderboard/private/view/951754
 
 // ********************
 // *** Generator(s) ***

@@ -1,10 +1,6 @@
 /// https://adventofcode.com/2021/day/12
 /// TER: https://adventofcode.com/2021/leaderboard/private/view/951754
-///
-/// https://docs.rs/regex/1.4.2/regex/
-/// https://docs.rs/regex/1.4.2/regex/#syntax
-// extern crate regex;
-// use self::regex::{Captures, Regex};
+
 
 use std::collections::{HashMap, HashSet};
 type Path = Vec<String>;

@@ -1,11 +1,7 @@
 /// https://adventofcode.com/2022/day/19
-/// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786
-/// TER: https://adventofcode.com/2022/leaderboard/private/view/951754
-///
-/// https://docs.rs/regex/1.4.2/regex/
-/// https://docs.rs/regex/1.4.2/regex/#syntax
-// extern crate regex;
-// use self::regex::{Captures, Regex};
+/// DAN AoC: https://adventofcode.com/2022/leaderboard/private/view/380786
+/// HLOTYAK: https://adventofcode.com/2022/leaderboard/private/view/951754
+
 use crate::day19::Material::*;
 
 fn parse_numbers(s: &str) -> Vec<isize> {
@@ -39,24 +35,30 @@ pub fn gen1(input: &str) -> Vec<Vec<usize>> {
 #[aoc(day19, part1)]
 pub fn part1(input: &[Vec<usize>]) -> usize {
     let factories: Vec<Factory> = input.iter()
-    .map(|inp| Factory::new(inp))
+    .map(|params| Factory::new(params))
     .collect();
 
     factories.into_iter()
         .map(|mut f| {
-            f.run(24);
-            println!("{:?}",f);
-            if let Geode(geode_cnt) = f.inventory[3] {
-                geode_cnt * f.blueprint
-            } else {
-                panic!("Should be Geode(?)")
-            }
+            (4..20).map(|o|{
+                (4..20).map(|c|{
+                    (4..20).map(|b|{
+                        f.run(24,o,c,b);
+                        // println!("{:?}",f);
+                        if let Geode(geode_cnt) = f.inventory[3] {
+                            geode_cnt * f.blueprint
+                        } else {
+                            panic!("Should be Geode(?)")
+                        }
+                    }).max().unwrap()
+                }).max().unwrap()
+            }).max().unwrap()
         }).sum()
 }
 
-// *********************
-// *** Detailed stuf ***
-// *********************
+// **********************
+// *** Detailed stuff ***
+// **********************
 #[derive(Clone, Copy, Debug)]
 pub enum Material {
     Clay(usize),
@@ -132,9 +134,12 @@ impl Factory {
         Factory { blueprint, inventory, robots }
     }
 
-    fn run(&mut self, minutes: usize) {
+    fn run(&mut self, minutes: usize, o: usize, c: usize, b: usize) {
+        let ore_robots_max = o;
+        let clay_robots_max = c;
+        let obsidian_robots_max = b;
         for _m in 0..minutes {
-            // Anticipate to-be-produced resource
+            // Pre-tally to-be-produced resources
             let produced_this_minute = [
                 self.robots.ore.count,
                 self.robots.clay.count,
@@ -152,7 +157,7 @@ impl Factory {
             } else {
                 panic!("Inventory structure mismatch")
             };
-            // Spend resources in inventory to build robots, starting with most expensive first
+            // Spend previously produced resources to build robots, starting with most expensive first
             let [mut ore, mut clay, mut obs, mut geode] = available_inventory;
             // Geode Robot
             if let (Ore(ore_cost),Obsidian(obsidian_cost)) = 
@@ -162,7 +167,7 @@ impl Factory {
                 if robot_cnt > 0 {
                     ore -= robot_cnt * ore_cost;
                     obs -= robot_cnt * obsidian_cost;
-                    geode += robot_cnt;
+                    self.robots.geode.count += robot_cnt;
                 }
             }
             // Obsidian Robot
@@ -170,26 +175,29 @@ impl Factory {
                     (self.robots.obsidian.cost[0], self.robots.obsidian.cost[1]) {
                 let robot_cnt = ore / ore_cost;
                 let robot_cnt = robot_cnt.min(clay / clay_cost);
+                let robot_cnt = robot_cnt.min(dbg!(obsidian_robots_max)-dbg!(self.robots.obsidian.count));
                 if robot_cnt > 0 {
                     ore -= robot_cnt * ore_cost;
                     clay -= robot_cnt * clay_cost;
-                    obs += robot_cnt;
+                    self.robots.obsidian.count += robot_cnt;
                 }
             }
             // Clay Robot
             if let Ore(ore_cost) = self.robots.clay.cost[0] {
                 let robot_cnt = ore / ore_cost;
+                let robot_cnt = robot_cnt.min(clay_robots_max-self.robots.clay.count);
                 if robot_cnt > 0 {
                     ore -= robot_cnt * ore_cost;
-                    clay += robot_cnt;
+                    self.robots.clay.count += robot_cnt;
                 }
             }
             // Ore Robot
             if let Ore(ore_cost) = self.robots.ore.cost[0] {
                 let robot_cnt = ore / ore_cost;
+                let robot_cnt = robot_cnt.min(ore_robots_max-self.robots.ore.count);
                 if robot_cnt > 0 {
                     ore -= robot_cnt * ore_cost;
-                    ore += robot_cnt;
+                    self.robots.ore.count += robot_cnt;
                 }
             }
             // Add new production to remaining inventory
@@ -204,7 +212,8 @@ impl Factory {
                 Obsidian(obs),
                 Geode(geode),
             ];
-            println!("Inventory: {:?}", self.inventory);
+            // println!("Inventory: {:?}", self.inventory);
+            // println!("Robots:    {:?}", self.robots);
         }
     }
 }

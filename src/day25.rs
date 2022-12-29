@@ -1,11 +1,6 @@
 /// https://adventofcode.com/2022/day/25
-/// DAN: https://adventofcode.com/2022/leaderboard/private/view/380786
-/// TER: https://adventofcode.com/2022/leaderboard/private/view/951754
-///
-/// https://docs.rs/regex/1.4.2/regex/
-/// https://docs.rs/regex/1.4.2/regex/#syntax
-// extern crate regex;
-// use self::regex::{Captures, Regex};
+/// DAN AoC: https://adventofcode.com/2022/leaderboard/private/view/380786
+/// HLOTYAK: https://adventofcode.com/2022/leaderboard/private/view/951754
 
 use std::fmt::Display;
 use crate::day25::SnafuDigit::*;

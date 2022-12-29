@@ -3,11 +3,7 @@ use std::{collections::HashMap, fmt::Display};
 /// https://adventofcode.com/2022/day/7
 /// AoC: https://adventofcode.com/2022/leaderboard/private/view/380786
 /// SEGCC: https://adventofcode.com/2022/leaderboard/private/view/951754
-///
-/// https://docs.rs/regex/1.4.2/regex/
-/// https://docs.rs/regex/1.4.2/regex/#syntax
-// extern crate regex;
-// use self::regex::{Captures, Regex};
+
 use crate::day7::{Command::*, FileSystemNode::*, TerminalOutput::*};
 
 // ********************
