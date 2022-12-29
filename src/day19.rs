@@ -43,6 +43,7 @@ pub fn part1(input: &[Vec<usize>]) -> usize {
             (4..20).map(|o|{
                 (4..20).map(|c|{
                     (4..20).map(|b|{
+                        f = f.reset();
                         f.run(24,o,c,b);
                         // println!("{:?}",f);
                         if let Geode(geode_cnt) = f.inventory[3] {
@@ -67,7 +68,7 @@ pub enum Material {
     Ore(usize),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Robot {
     produces: Material,
     cost: Vec<Material>,
@@ -134,6 +135,27 @@ impl Factory {
         Factory { blueprint, inventory, robots }
     }
 
+    fn reset(&self) -> Self {
+        let blueprint = self.blueprint;
+        let inventory = [
+            Ore(0),
+            Clay(0),
+            Obsidian(0),
+            Geode(0),
+        ];
+        let mut ore = self.robots.ore.clone();
+        ore.count = 1;
+        let mut clay = self.robots.clay.clone();
+        clay.count = 0;
+        let mut obsidian = self.robots.obsidian.clone();
+        obsidian.count = 0;
+        let mut geode = self.robots.geode.clone();
+        geode.count = 0;
+        let robots = RobotList {ore, clay, obsidian, geode};
+
+        Factory { blueprint, inventory, robots }
+    }
+
     fn run(&mut self, minutes: usize, o: usize, c: usize, b: usize) {
         let ore_robots_max = o;
         let clay_robots_max = c;
@@ -175,7 +197,7 @@ impl Factory {
                     (self.robots.obsidian.cost[0], self.robots.obsidian.cost[1]) {
                 let robot_cnt = ore / ore_cost;
                 let robot_cnt = robot_cnt.min(clay / clay_cost);
-                let robot_cnt = robot_cnt.min(dbg!(obsidian_robots_max)-dbg!(self.robots.obsidian.count));
+                let robot_cnt = robot_cnt.min(obsidian_robots_max-self.robots.obsidian.count);
                 if robot_cnt > 0 {
                     ore -= robot_cnt * ore_cost;
                     clay -= robot_cnt * clay_cost;
