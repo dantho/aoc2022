@@ -18,7 +18,6 @@ fn parse_numbers_usize(s: &str) -> Vec<usize> {
     .map(|i| i as usize)
     .collect()    
 }
-
 // ********************
 // *** Generator(s) ***
 // ********************/
@@ -70,23 +69,10 @@ pub enum Material {
 
 #[derive(Debug, Clone)]
 pub struct Robot {
+    #[allow(dead_code)]
     produces: Material,
     cost: Vec<Material>,
     count: usize,
-}
-
-impl Robot {
-    fn add(&mut self, n: usize) {
-        self.count += n;
-    }
-}
-
-#[derive(Debug)]
-pub struct Inventory {
-    ore: Material,
-    clay: Material,
-    obsidian: Material,
-    geode: Material,
 }
 
 #[derive(Debug)]
@@ -161,13 +147,6 @@ impl Factory {
         let clay_robots_max = c;
         let obsidian_robots_max = b;
         for _m in 0..minutes {
-            // Pre-tally to-be-produced resources
-            let produced_this_minute = [
-                self.robots.ore.count,
-                self.robots.clay.count,
-                self.robots.obsidian.count,
-                self.robots.geode.count
-            ];
             // Restructure data format of previously produced resources
             let available_inventory = if let [
                 Ore(a),
@@ -179,6 +158,49 @@ impl Factory {
             } else {
                 panic!("Inventory structure mismatch")
             };
+            // Pre-tally to-be-produced resources
+            let produced_this_minute = [
+                if self.robots.ore.count > 0 {
+                    // println!("{} ore-collecting robot{} collect{} {} ore; you now have {} ore.",
+                    //     self.robots.ore.count,
+                    //     if self.robots.ore.count == 1 {""} else {"s"},
+                    //     if self.robots.ore.count == 1 {"s"} else {""},
+                    //     self.robots.ore.count,
+                    //     self.robots.ore.count + available_inventory[0],
+                    // );
+                    self.robots.ore.count
+                } else {0},
+                if self.robots.clay.count > 0 {
+                    // println!("{} clay-collecting robot{} collect{} {} clay; you now have {} clay.",
+                    //     self.robots.clay.count,
+                    //     if self.robots.clay.count == 1 {""} else {"s"},
+                    //     if self.robots.clay.count == 1 {"s"} else {""},
+                    //     self.robots.clay.count,
+                    //     self.robots.clay.count + available_inventory[1],
+                    // );
+                    self.robots.clay.count
+                } else {0},
+                if self.robots.obsidian.count > 0 {
+                    // println!("{} obsidian-collecting robot{} collect{} {} obsidian; you now have {} obsidian.",
+                    //     self.robots.obsidian.count,
+                    //     if self.robots.obsidian.count == 1 {""} else {"s"},
+                    //     if self.robots.obsidian.count == 1 {"s"} else {""},
+                    //     self.robots.obsidian.count,
+                    //     self.robots.obsidian.count + available_inventory[2],
+                    // );
+                    self.robots.obsidian.count
+                } else {0},
+                if self.robots.geode.count > 0 {
+                    // println!("{} geode-collecting robot{} collect{} {} geode; you now have {} geode.",
+                    //     self.robots.geode.count,
+                    //     if self.robots.geode.count == 1 {""} else {"s"},
+                    //     if self.robots.geode.count == 1 {"s"} else {""},
+                    //     self.robots.geode.count,
+                    //     self.robots.geode.count + available_inventory[3],
+                    // );
+                    self.robots.geode.count
+                } else {0},
+            ];
             // Spend previously produced resources to build robots, starting with most expensive first
             let [mut ore, mut clay, mut obs, mut geode] = available_inventory;
             // Geode Robot
