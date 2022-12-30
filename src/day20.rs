@@ -20,7 +20,7 @@ pub fn gen1(input: &str) -> Vec<isize> {
 pub fn part1(input: &[isize]) -> isize {
     #[cfg(test)]
     println!("Orig values:   {:?}", input);
-    let len = input.len();
+    let len = dbg!(input.len());
     // Instead of mixing values, we'll mix ptrs (input index) to those values
     let mut input_index: Vec<usize> = (0..len).collect();
     // The above will be scrambled, so we need a descrambler
@@ -64,9 +64,10 @@ pub fn part1(input: &[isize]) -> isize {
             println!("New values:    {:?}", ddd);
         }
     }
-    let index_of_zero = input_index.iter().enumerate().fold(None,|ndx0,(i, input_ndx)| if 0 == input[*input_ndx] {Some(i)} else {ndx0}).unwrap();
-    [(index_of_zero + 1000) % len,(index_of_zero + 2000) % len,(index_of_zero + 3000) % len].iter()
-        .map(|i|input[input_index[*i]]).sum()
+    let index_of_zero = input_index.iter().enumerate()
+        .fold(None,|ndx0, (i, input_ndx)| if 0 == input[*input_ndx] {Some(i)} else {ndx0}).unwrap();
+    dbg!([(1000+index_of_zero) % len,(2000+index_of_zero) % len,(3000+index_of_zero) % len]).iter()
+        .map(|i|dbg!(input[input_index[*i]])).sum()
 }
 
 fn signed_mod(v: isize, modulo: usize) -> usize {
@@ -88,14 +89,20 @@ mod tests {
     #[test]
     fn test_signed_mod() {
         assert_eq!(signed_mod(-14, 7), 0);
-        assert_eq!(signed_mod(-8, 7), 6);
         assert_eq!(signed_mod(-7, 7), 0);
-        assert_eq!(signed_mod(-1, 7), 6);
         assert_eq!(signed_mod(0, 7), 0);
-        assert_eq!(signed_mod(6, 7), 6);
         assert_eq!(signed_mod(7, 7), 0);
-        assert_eq!(signed_mod(13, 7), 6);
         assert_eq!(signed_mod(14, 7), 0);
+        assert_eq!(signed_mod(14000007, 7), 0);
+        assert_eq!(signed_mod(13, 7), 6);
+        assert_eq!(signed_mod(6, 7), 6);
+        assert_eq!(signed_mod(-1, 7), 6);
+        assert_eq!(signed_mod(-8, 7), 6);
+        assert_eq!(signed_mod(-9, 7), 5);
+        assert_eq!(signed_mod(-10, 7), 4);
+        assert_eq!(signed_mod(-11, 7), 3);
+        assert_eq!(signed_mod(-12, 7), 2);
+        assert_eq!(signed_mod(-13, 7), 1);
     }
 
     #[test]
