@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 /// https://adventofcode.com/2022/day/21
 /// DAN AoC: https://adventofcode.com/2022/leaderboard/private/view/380786
 /// HLOTYAK: https://adventofcode.com/2022/leaderboard/private/view/951754
@@ -6,15 +8,7 @@ use crate::day21::Ops::*;
 // ***********************
 // *** Monkey Business ***
 // ***********************
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Ops {
-    Add,
-    Sub,
-    Mult,
-    Div,
-    Known,
-}
-
+#[derive(Clone, Debug)]
 pub struct Monkey {
     name: String,
     monkeys: Option<(String, String)>,
@@ -22,133 +16,88 @@ pub struct Monkey {
     math: Ops,
 }
 
-impl Monkey {
-    fn yell(&self, m1: Option<u64>, m2: Option<u64>) -> u64 {
-        let (m1,m2) = if self.math == Known {
-            assert!(m1.is_none() && m2.is_none());
-            (u64::MAX,u64::MAX)
-        } else {
-            (m1.unwrap(), m2.unwrap())
-        }
-        match self.math {
-            Known => self.known.unwrap(),
-            Add => m1 + m2,
-            Sub => m1 - m2,
-            Mult => m1 * m2,
-            Div => m1 / m2,
-        }
-    }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Ops {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Known,
 }
 
 // ********************
 // *** Generator(s) ***
-// ********************/
+// ********************
 #[aoc_generator(day21)]
-pub fn gen1(_input: &str) -> bool {
-    false
+pub fn gen1(input: &str) -> Vec<Monkey> {
+    input.lines().map(|line| {
+        let mut pieces = line.split(' ');
+        let name = pieces.next().unwrap()[0..4].to_string();
+        let name_or_num = pieces.next().unwrap();
+        if let Ok(num) = name_or_num.parse() {
+            Monkey { name, known: Some(num), math: Known, monkeys: None }
+        } else {
+            let op = match pieces.next() {
+                Some("+") => Add,
+                Some("-") => Sub,
+                Some("*") => Mul,
+                Some("/") => Div,
+                Some(bad) => panic!("Unknown math operator {}", bad),
+                None => panic!("Parsing Error"),
+            };
+            let name2 = pieces.next().unwrap();
+            Monkey { name, known: None, math: op, monkeys: Some((name_or_num.to_string(), name2.to_string()))}
+        }
+    }).collect()
+
 }
 
 // *********************
 // *** Part1 & Part2 ***
 // *********************
 #[aoc(day21, part1)]
-pub fn part1(use_example: &bool) -> u64 {
-    let monkeys = get_monkeys(*use_example);
-    monkey_business(monkeys, true)
-}
+pub fn part1(input: &[Monkey]) -> u64 {
+    let monkeys = input.to_vec();
+    let mut known_monkeys = monkeys.iter().filter(|m|m.known.is_some())
+        .map(|m| (m.name.to_string(), m.clone()))
+        .collect::<HashMap<_, _>>();
+    let mut unknown_monkeys = monkeys.into_iter().filter(|m|m.known.is_none()).collect::<Vec<_>>();
+    assert_eq!(input.len(), known_monkeys.len() + unknown_monkeys.len());
 
-#[aoc(day21, part2)]
-pub fn part2(use_example: &bool) -> u64 {
-    let monkeys = get_monkeys(*use_example);
-    monkey_business(monkeys, false)
-}
-
-fn get_monkeys(use_example: bool) -> Vec<Monkey> {
-    if use_example {
-        vec![
-            Monkey::new(vec![79, 98], Box::new(|worry| worry * 19), 23, (2, 3)),
-            Monkey::new(
-                vec![54, 65, 75, 74],
-                Box::new(|worry| worry + 6),
-                19,
-                (2, 0),
-            ),
-            Monkey::new(
-                vec![79, 60, 97],
-                Box::new(|worry| worry * worry),
-                13,
-                (1, 3),
-            ),
-            Monkey::new(vec![74], Box::new(|worry| worry + 3), 17, (0, 1)),
-        ]
-    } else {
-        vec![
-            Monkey::new(vec![93, 98], Box::new(|worry| worry * 17), 19, (5, 3)),
-            Monkey::new(
-                vec![95, 72, 98, 82, 86],
-                Box::new(|worry| worry + 5),
-                13,
-                (7, 6),
-            ),
-            Monkey::new(
-                vec![85, 62, 82, 86, 70, 65, 83, 76],
-                Box::new(|worry| worry + 8),
-                5,
-                (3, 0),
-            ),
-            Monkey::new(vec![86, 70, 71, 56], Box::new(|worry| worry + 1), 7, (4, 5)),
-            Monkey::new(
-                vec![77, 71, 86, 52, 81, 67],
-                Box::new(|worry| worry + 4),
-                17,
-                (1, 6),
-            ),
-            Monkey::new(
-                vec![89, 87, 60, 78, 54, 77, 98],
-                Box::new(|worry| worry * 7),
-                2,
-                (1, 4),
-            ),
-            Monkey::new(vec![69, 65, 63], Box::new(|worry| worry + 6), 3, (7, 2)),
-            Monkey::new(vec![89], Box::new(|worry| worry * worry), 11, (0, 2)),
-        ]
-    }
-}
-
-fn monkey_business(mut monkeys: Vec<Monkey>, is_part1: bool) -> u64 {
-    let multiple_of_all_divisors = monkeys.iter().fold(1, |acc, monkey| acc * monkey.divisor);
-    let mut inspect_count = vec![0; monkeys.len()];
-    for _round in 0..if is_part1 { 20 } else { 10_000 } {
-        for m in 0..monkeys.len() {
-            // println!("Monkey {} at start of round {}: {:?}", m, round, monkeys[m].items);
-            while !monkeys[m].items.is_empty() {
-                inspect_count[m] += 1;
-                monkeys[m].items.reverse();
-                let item = monkeys[m].items.pop().unwrap();
-                monkeys[m].items.reverse();
-                let item = (monkeys[m].operation)(item);
-                let item = if is_part1 {
-                    item / 3
-                } else {
-                    item % multiple_of_all_divisors
-                };
-                let target = if item % monkeys[m].divisor == 0 {
-                    monkeys[m].targets.0
-                } else {
-                    monkeys[m].targets.1
-                };
-                monkeys[target].items.push(item);
+    while !unknown_monkeys.is_empty() {
+        for unk_monk in &mut unknown_monkeys {
+            if let Some((m1, m2)) = &unk_monk.monkeys {
+                if known_monkeys.contains_key(m1) && known_monkeys.contains_key(m2) {
+                    if let Some(n1) = known_monkeys[m1].known {
+                        if let Some(n2) = known_monkeys[m2].known {
+                            let now_known = match &unk_monk.math {
+                                Add => Some(n1 + n2),
+                                Sub => Some(n1 - n2),
+                                Mul => Some(n1 * n2),
+                                Div => Some(n1 / n2),
+                                Known => panic!("Should not be known already"),
+                            };
+                            unk_monk.known = now_known;
+                            unk_monk.monkeys = None;
+                        }
+                    }
+                }
+            } else {
+                panic!("Unknown monkeys MUST have .monkeys defined");
             }
         }
-        // println!("End of Round {}:", round);
-        // for m in 0..monkeys.len() {
-        //     println!("Monkey {}: {:?}", m, monkeys[m].items);
-        // }
+        unknown_monkeys = unknown_monkeys.into_iter().filter_map(|m| {
+            if m.known.is_some() {
+                known_monkeys.insert(m.name.to_string(), m);
+                None
+            } else {
+                Some(m)
+            }
+        }).collect();
     }
-    // println!("{:?}", inspect_count);
-    inspect_count.sort();
-    inspect_count.reverse();
-    inspect_count[0] * inspect_count[1]
+    
+    known_monkeys["root"].known.unwrap()
+
 }
 
 // *************
@@ -160,40 +109,28 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        assert_eq!(part1(&true), 10605);
+        assert_eq!(part1(&gen1(EX1)), 152);
     }
 
-    #[test]
-    fn test_ex1_part2() {
-        assert_eq!(part2(&true), 2713310158);
-    }
+    // #[test]
+    // fn test_ex1_part2() {
+    //     assert_eq!(part2(&true), 2713310158);
+    // }
 
     #[allow(unused)]
-    const EX1: &'static str = r"Monkey 0:
-Starting items: 79, 98
-Operation: new = old * 19
-Test: divisible by 23
-    If true: throw to monkey 2
-    If false: throw to monkey 3
-
-Monkey 1:
-Starting items: 54, 65, 75, 74
-Operation: new = old + 6
-Test: divisible by 19
-    If true: throw to monkey 2
-    If false: throw to monkey 0
-
-Monkey 2:
-Starting items: 79, 60, 97
-Operation: new = old * old
-Test: divisible by 13
-    If true: throw to monkey 1
-    If false: throw to monkey 3
-
-Monkey 3:
-Starting items: 74
-Operation: new = old + 3
-Test: divisible by 17
-    If true: throw to monkey 0
-    If false: throw to monkey 1";
+    const EX1: &'static str = r"root: pppw + sjmn
+dbpl: 5
+cczh: sllz + lgvd
+zczc: 2
+ptdq: humn - dvpt
+dvpt: 3
+lfqf: 4
+humn: 5
+ljgn: 2
+sjmn: drzm * dbpl
+sllz: 4
+pppw: cczh / lfqf
+lgvd: ljgn * ptdq
+drzm: hmdt - zczc
+hmdt: 32";
 }
