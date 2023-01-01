@@ -3,29 +3,35 @@
 /// HLOTYAK: https://adventofcode.com/2022/leaderboard/private/view/951754
 
 use std::collections::HashMap;
+type Vname = [char; 2]; // Two-char arrays are COPY, Strings are not
 
+fn sorted(a: [char; 2], b: [char; 2]) -> ([char; 2], [char; 2]) {
+    if a < b { (a,b) }
+    else { (b,a) }
+}
 // ********************
 // *** Generator(s) ***
 // ********************/
 #[aoc_generator(day16)]
-pub fn gen1(input: &str) -> (HashMap<String, u32>, HashMap<(String, String), u32>) {
+pub fn gen1(input: &str) -> (HashMap<Vname, u32>, HashMap<(Vname, Vname), u32>) {
     let mut flow_rates = HashMap::new();
     let mut tunnels = HashMap::new();
     // Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
     for line in input.lines() {
         let parts = line.split(' ').collect::<Vec<_>>();
-        let name = parts[1].to_string();
+        let mut n = parts[1].chars();
+        let name = [n.next().unwrap(), n.next().unwrap()] as Vname;
         let flow_rate = parts[4][5..parts[4].len()-1].parse().unwrap();
-        flow_rates.insert(name.to_string(), flow_rate);
+        flow_rates.insert(name, flow_rate);
         let tunnelv = parts[9..].to_vec();
         let tunnelv = tunnelv.into_iter().map(|t| {
-            let vname = name.clone();
-            let tname = t[0..2].to_string();
+            let vname = name;
+            let tname = [t.chars().next().unwrap(), t.chars().next().unwrap()] as Vname;
             (if vname < tname {
                 (vname, tname)
             } else {
                 (tname, vname)
-            }, 1)            
+            }, 1)
         }).collect::<Vec<_>>();
         tunnels.extend(tunnelv.into_iter());
     }
@@ -36,15 +42,17 @@ pub fn gen1(input: &str) -> (HashMap<String, u32>, HashMap<(String, String), u32
 // *** Part1 & Part2 ***
 // *********************
 #[aoc(day16, part1)]
-pub fn part1(input: &(HashMap<String, u32>, HashMap<(String, String), u32>)) -> u32 {
-    let flow_rates: HashMap<String, u32> = input.0.iter()
+pub fn part1(input: &(HashMap<Vname, u32>, HashMap<(Vname, Vname), u32>)) -> u32 {
+    let mut flow_rates: HashMap<Vname, u32> = input.0.iter()
         .filter(|(_, flow)| **flow > 0)
-        .map(|(s,f)|(s.to_string(),*f))
+        .map(|(s,f)|(*s,*f))
         .collect();
     let mut tunnels = input.1.clone();
 
     // println!("Flow Rates: {:?}", input.0);
-    println!("Tunnels: {:?}", tunnels);
+    let mut sorted_conn = tunnels.iter().collect::<Vec<_>>();
+    sorted_conn.sort();
+    println!("Direct connections: {:?}", sorted_conn);
 
     // Build up paths through maze
     for _i in 0..100  {
@@ -53,10 +61,10 @@ pub fn part1(input: &(HashMap<String, u32>, HashMap<(String, String), u32>)) -> 
                 match (a==&aa, b==&bb, a==&bb, b==&aa) {
                     (true, true, _, _) => None,
                     (_, _, true, true) => None,
-                    (true, false, _, _) => Some(((bb.to_string(), b.to_string()), dist1+*dist2)),
-                    (false, true, _, _) => Some(((aa.to_string(), a.to_string()), dist1+*dist2)),
-                    (_, _, true, false) => Some(((aa.to_string(), b.to_string()), dist1+*dist2)),
-                    (_, _, false, true) => Some(((bb.to_string(), a.to_string()), dist1+*dist2)),
+                    (true, false, _, _) => Some(((bb, *b), dist1+*dist2)),
+                    (false, true, _, _) => Some(((aa, *a), dist1+*dist2)),
+                    (_, _, true, false) => Some(((aa, *b), dist1+*dist2)),
+                    (_, _, false, true) => Some(((bb, *a), dist1+*dist2)),
                     _ => None
                 }}).collect::<Vec<_>>();
             for ((a,b), dist) in connections {
@@ -65,15 +73,28 @@ pub fn part1(input: &(HashMap<String, u32>, HashMap<(String, String), u32>)) -> 
             }
         }
     }
+    let mut sorted_conn = tunnels.iter().collect::<Vec<_>>();
+    sorted_conn.sort();
+    println!("All connections: {:?}", sorted_conn);
 
-    // Now maximize flow, somehow -- lets target max flow at all costs
+    // Now maximize flow, somehow -- lets target max flow at all costs -- didn't work
+    // Let's try max flow after considering all known factors now.
     let mut minutes=30;
-    let mut location="AA".to_string();
-
-    while minutes > 0 {
-        let max_valve_rate = flow_rates.iter().fold(("".to_string(), 0),|(max_valve, max_flow), (valve,&flow)| {
-            if flow > max_flow {
-                (valve.to_string(), flow)
+    let mut location=['A','A']; // Starting location is "AA"
+    let mut total_flow = 0;
+    while minutes > 0 && !flow_rates.is_empty() {
+        // let max_valve_rate = flow_rates.iter().fold((['_','_'], 0),|(max_valve, max_flow), (&vname, &flow)| {
+        //     if flow > max_flow {
+        //         (vname, flow)
+        //     } else {
+        //         (max_valve, max_flow)
+        //     }
+        // });
+        let max_valve_rate = flow_rates.iter().fold((['_','_'], 0),|(max_valve, max_flow), (&vname, &flow)| {
+            let distance_to_valve = tunnels[&sorted(location, vname)];
+            let new_flow = (minutes - distance_to_valve - 1) * flow;
+            if new_flow > max_flow {
+                (vname, new_flow)
             } else {
                 (max_valve, max_flow)
             }
@@ -84,19 +105,19 @@ pub fn part1(input: &(HashMap<String, u32>, HashMap<(String, String), u32>)) -> 
             tunnels.get(&(location, max_valve_rate.0))
         };
         let cost = dist_to_max.unwrap()+1;
-        // not yet finished:
+
+        // Can we make it there in time?
         if cost <= minutes {
             minutes -= cost;
-            location = max_valve_rate.0; // todo
+            location = max_valve_rate.0;
+            total_flow += max_valve_rate.1*minutes;
+            println!("{:?} flowing at {} at minute {}", location, max_valve_rate.1, minutes);
         }
-        minutes -= cost.min(minutes);
-
-
+        flow_rates.remove(&max_valve_rate.0);
     }
     
-    println!("Tunnels: {:?}", tunnels);
+    total_flow
 
-    888
 }
 
 // *************

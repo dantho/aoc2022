@@ -54,7 +54,7 @@ pub fn gen1(input: &str) -> Vec<TerminalContent> {
                 "$" => match parts.next().unwrap() {
                     "ls" => TerminalContent::Command(Command::Ls),
                     "cd" => TerminalContent::Command(Command::Cd(parts.next().unwrap().to_string())),
-                    bad => panic!("Unknown command '{}'", bad),
+                    bad => panic!("Unknown command {bad}"),
                 },
                 "dir" => TerminalContent::OutputLine(FileSystemNode::Dir(
                     parts.next().unwrap().to_string(),
