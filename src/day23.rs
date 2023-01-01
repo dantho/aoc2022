@@ -126,6 +126,7 @@ fn print_elves(elves: &HashSet<(usize,usize)>) {
 mod tests {
     use super::*;
 
+    // Part 2, actually
     #[test]
     fn test_ex1_part1() {
         assert_eq!(part1(&gen1(EX1)), 20);

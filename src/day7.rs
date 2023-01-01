@@ -1,24 +1,9 @@
-use std::{collections::HashMap, fmt::Display};
-
 /// https://adventofcode.com/2022/day/7
 /// AoC: https://adventofcode.com/2022/leaderboard/private/view/380786
 /// SEGCC: https://adventofcode.com/2022/leaderboard/private/view/951754
 
-use crate::day7::{Command::*, FileSystemNode::*, TerminalOutput::*};
-
-// ********************
-// *** Generator(s) ***
-// ********************/
-// struct FileSystem {
-//     root: trees::Tree<FileSystemNode>,
-// }
-
-// impl FileSystem {
-//     fn new() -> FileSystem {
-//         let newfs: FileSystem = FileSystem { root: Tree::<FileSystemNode>::new(Dir("/".to_string())) };
-//         newfs
-//     }
-// }
+use std::{collections::HashMap, fmt::Display};
+use crate::day7::{Command::*, FileSystemNode::*, TerminalContent::*};
 
 struct Path {
     path: Vec<String>,
@@ -29,8 +14,7 @@ impl Display for Path {
         write!(
             f,
             "{}",
-            self.path
-                .iter()
+            self.path.iter()
                 .map(|s| s.chars().chain("_".chars()))
                 .flatten()
                 .collect::<String>()
@@ -45,7 +29,7 @@ pub enum FileSystemNode {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum TerminalOutput {
+pub enum TerminalContent {
     Command(Command),
     OutputLine(FileSystemNode),
 }
@@ -56,22 +40,26 @@ pub enum Command {
     Cd(String),
 }
 
+// ********************
+// *** Generator(s) ***
+// ********************
+
 #[aoc_generator(day7)]
-pub fn gen1(input: &str) -> Vec<TerminalOutput> {
+pub fn gen1(input: &str) -> Vec<TerminalContent> {
     input
         .lines()
         .map(|line| {
             let mut parts = line.split(' ');
             match parts.next().unwrap() {
                 "$" => match parts.next().unwrap() {
-                    "ls" => TerminalOutput::Command(Command::Ls),
-                    "cd" => TerminalOutput::Command(Command::Cd(parts.next().unwrap().to_string())),
+                    "ls" => TerminalContent::Command(Command::Ls),
+                    "cd" => TerminalContent::Command(Command::Cd(parts.next().unwrap().to_string())),
                     bad => panic!("Unknown command '{}'", bad),
                 },
-                "dir" => TerminalOutput::OutputLine(FileSystemNode::Dir(
+                "dir" => TerminalContent::OutputLine(FileSystemNode::Dir(
                     parts.next().unwrap().to_string(),
                 )),
-                size => TerminalOutput::OutputLine(FileSystemNode::File(
+                size => TerminalContent::OutputLine(FileSystemNode::File(
                     parts.next().unwrap().to_string(),
                     size.parse().unwrap(),
                 )),
@@ -85,7 +73,7 @@ pub fn gen1(input: &str) -> Vec<TerminalOutput> {
 // *********************
 
 #[aoc(day7, part1)]
-pub fn part1(terminal: &[TerminalOutput]) -> u64 {
+pub fn part1(terminal: &[TerminalContent]) -> u64 {
     let mut fs: HashMap<String, Vec<(String, u64)>> = HashMap::new();
     let mut traversed = Path { path: Vec::new() };
     for line in terminal {
@@ -132,7 +120,7 @@ pub fn part1(terminal: &[TerminalOutput]) -> u64 {
 }
 
 #[aoc(day7, part2)]
-pub fn part2(terminal: &[TerminalOutput]) -> u64 {
+pub fn part2(terminal: &[TerminalContent]) -> u64 {
     let mut fs: HashMap<String, Vec<(String, u64)>> = HashMap::new();
     let mut traversed = Path { path: Vec::new() };
     for line in terminal {
