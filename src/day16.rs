@@ -77,12 +77,16 @@ pub fn part1(input: &(HashMap<Vname, u32>, HashMap<(Vname, Vname), u32>)) -> u32
     sorted_conn.sort();
     println!("All connections: {:?}", sorted_conn);
 
-    // Now maximize flow, somehow -- lets target max flow at all costs -- didn't work
-    // Let's try max flow after considering all known factors now.
+    // Now maximize flow, somehow -- lets target max next flow at all costs -- didn't work
+    // Let's try max total flow after considering minutes with valve open -- didn't work
+    // Let's enumerate all orders starting with the sorted order of max flow rate first
     let mut minutes=30;
     let mut location=['A','A']; // Starting location is "AA"
     let mut total_flow = 0;
     while minutes > 0 && !flow_rates.is_empty() {
+        let tunnels2 = tunnels.clone();
+
+        // Greedy for max flow
         // let max_valve_rate = flow_rates.iter().fold((['_','_'], 0),|(max_valve, max_flow), (&vname, &flow)| {
         //     if flow > max_flow {
         //         (vname, flow)
@@ -90,30 +94,53 @@ pub fn part1(input: &(HashMap<Vname, u32>, HashMap<(Vname, Vname), u32>)) -> u32
         //         (max_valve, max_flow)
         //     }
         // });
-        let max_valve_rate = flow_rates.iter().fold((['_','_'], 0),|(max_valve, max_flow), (&vname, &flow)| {
-            let distance_to_valve = tunnels[&sorted(location, vname)];
-            let new_flow = (minutes - distance_to_valve - 1) * flow;
-            if new_flow > max_flow {
-                (vname, new_flow)
-            } else {
-                (max_valve, max_flow)
-            }
-        });
-        let dist_to_max = if max_valve_rate.0 < location {
-            tunnels.get(&(max_valve_rate.0, location))
-        } else {
-            tunnels.get(&(location, max_valve_rate.0))
-        };
-        let cost = dist_to_max.unwrap()+1;
 
-        // Can we make it there in time?
-        if cost <= minutes {
-            minutes -= cost;
-            location = max_valve_rate.0;
-            total_flow += max_valve_rate.1*minutes;
-            println!("{:?} flowing at {} at minute {}", location, max_valve_rate.1, minutes);
-        }
-        flow_rates.remove(&max_valve_rate.0);
+        // Greedy for max payback
+        let (mut max_valve, mut max_flow) = flow_rates.iter()
+            .fold((['_','_'], 0),|(max_valve, max_flow), (&vname, &flow)| {
+                let distance_to_valve = tunnels[&sorted(location, vname)];
+                let new_flow = if minutes < distance_to_valve + 1 {0} else {
+                    (minutes - (distance_to_valve + 1)) * flow
+                };
+                if new_flow > max_flow {
+                    (vname, new_flow)
+                } else {
+                    (max_valve, max_flow)
+                }
+            });
+
+        // consider nearer valves "along the way"
+        let mut dist_to_max = tunnels[&sorted(location, max_valve)];
+        let mut max_rate = flow_rates[&max_valve];
+        for &near_valve in flow_rates.keys()
+            .filter(move |&&other_valve| {
+                if other_valve == location || other_valve == max_valve {
+                    false
+                } else {
+                    let dist_to_other = tunnels2[&sorted(location, other_valve)];
+                    dist_to_other < dist_to_max
+                }
+            }) {
+                let dist_to_near = tunnels[&sorted(location, near_valve)];
+                let dist_from_near_to_max = tunnels[&sorted(near_valve, max_valve)];
+                let near_rate = flow_rates[&near_valve];
+                let spent_time = dist_to_near+dist_from_near_to_max+1-dist_to_max;
+                let opportunity_cost = max_flow*spent_time;
+                let near_benefit = near_rate*dist_from_near_to_max;
+                if near_benefit > opportunity_cost {
+                    dist_to_max = dist_to_near;
+                    max_valve = near_valve;
+                    max_rate = near_rate;
+                    max_flow = max_rate*(minutes-(dist_to_max+1));
+                } 
+            }
+        
+        total_flow += max_flow;
+        flow_rates.remove(&max_valve);
+
+        minutes -= dist_to_max+1;
+        location = max_valve;
+        println!("{:?} with total flow of {} at minute {}", location, max_flow, minutes);
     }
     
     total_flow
