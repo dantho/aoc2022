@@ -77,74 +77,31 @@ pub fn part1(input: &(HashMap<Vname, u32>, HashMap<(Vname, Vname), u32>)) -> u32
     sorted_conn.sort();
     println!("All connections: {:?}", sorted_conn);
 
-    // Now maximize flow, somehow -- lets target max next flow at all costs -- didn't work
-    // Let's try max total flow after considering minutes with valve open -- didn't work
-    // Let's enumerate all orders starting with the sorted order of max flow rate first
-    let mut minutes=30;
-    let mut location=['A','A']; // Starting location is "AA"
-    let mut total_flow = 0;
-    while minutes > 0 && !flow_rates.is_empty() {
-        let tunnels2 = tunnels.clone();
+    let starting_loc: Vname = ['A', 'A'];
+    flow_rates.insert(starting_loc, 0);
 
-        // Greedy for max flow
-        // let max_valve_rate = flow_rates.iter().fold((['_','_'], 0),|(max_valve, max_flow), (&vname, &flow)| {
-        //     if flow > max_flow {
-        //         (vname, flow)
-        //     } else {
-        //         (max_valve, max_flow)
-        //     }
-        // });
+    max_flow(30, starting_loc, flow_rates, &tunnels)
 
-        // Greedy for max payback
-        let (mut max_valve, mut max_flow) = flow_rates.iter()
-            .fold((['_','_'], 0),|(max_valve, max_flow), (&vname, &flow)| {
-                let distance_to_valve = tunnels[&sorted(location, vname)];
-                let new_flow = if minutes < distance_to_valve + 1 {0} else {
-                    (minutes - (distance_to_valve + 1)) * flow
-                };
-                if new_flow > max_flow {
-                    (vname, new_flow)
-                } else {
-                    (max_valve, max_flow)
-                }
-            });
+}
 
-        // consider nearer valves "along the way"
-        let mut dist_to_max = tunnels[&sorted(location, max_valve)];
-        let mut max_rate = flow_rates[&max_valve];
-        for &near_valve in flow_rates.keys()
-            .filter(move |&&other_valve| {
-                if other_valve == location || other_valve == max_valve {
-                    false
-                } else {
-                    let dist_to_other = tunnels2[&sorted(location, other_valve)];
-                    dist_to_other < dist_to_max
-                }
-            }) {
-                let dist_to_near = tunnels[&sorted(location, near_valve)];
-                let dist_from_near_to_max = tunnels[&sorted(near_valve, max_valve)];
-                let near_rate = flow_rates[&near_valve];
-                let spent_time = dist_to_near+dist_from_near_to_max+1-dist_to_max;
-                let opportunity_cost = max_flow*spent_time;
-                let near_benefit = near_rate*dist_from_near_to_max;
-                if near_benefit > opportunity_cost {
-                    dist_to_max = dist_to_near;
-                    max_valve = near_valve;
-                    max_rate = near_rate;
-                    max_flow = max_rate*(minutes-(dist_to_max+1));
-                } 
-            }
-        
-        total_flow += max_flow;
-        flow_rates.remove(&max_valve);
-
-        minutes -= dist_to_max+1;
-        location = max_valve;
-        println!("{:?} with total flow of {} at minute {}", location, max_flow, minutes);
+// Based on still-closed valves and minutes remaining,
+// choose each possible valve and recurse down on the others
+// return max flow obtained by all possible [next] choices made at this level
+fn max_flow(minutes_remaining_after_open: u32, this_valve: Vname, mut flow_rates: HashMap<Vname, u32>, tunnels: &HashMap<(Vname, Vname), u32>) -> u32 {
+    let this_flow = flow_rates[&this_valve] * minutes_remaining_after_open;
+    flow_rates.remove(&this_valve);
+    if let Some(max_remaining) = flow_rates.keys().map(|valve| {
+        let mins_to_open_next_valve = tunnels[&sorted(this_valve, *valve)]+1;
+        if minutes_remaining_after_open > mins_to_open_next_valve {
+            max_flow(minutes_remaining_after_open - mins_to_open_next_valve, *valve, flow_rates.clone(), tunnels)
+        } else {
+            0
+        }
+    }).max() {
+        this_flow + max_remaining
+    } else {
+        this_flow + 0
     }
-    
-    total_flow
-
 }
 
 // *************
