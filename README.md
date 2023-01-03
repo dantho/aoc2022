@@ -21,13 +21,13 @@ Teradyne private [Leaderboard](https://adventofcode.com/2022/leaderboard/private
 | [13: Distress Signal](https://adventofcode.com/2022/day/13) |⭐⭐|  |
 | [14: Regolith Reservoir](https://adventofcode.com/2022/day/14) |⭐⭐| Filling Fast Fun!  With sand!  References 2018's Day 17: Reservoir Research, but I rewrote from scratch.  Faster?  Animation opportunity. |
 | [15: Beacon Exclusion Zone](https://adventofcode.com/2022/day/15) |⭐⭐| Brute force barely works in part 1. Part 2 was kinda brutal. |
-| [16: Proboscidea Volcanium](https://adventofcode.com/2022/day/17) |  | HARD! Valves, flow rates, paths. Weighted Graph Algo, Maximum/Minimum Spanning Trees, greedy algorithms, all paths? Ugh. Skipping for now. |
+| [16: Proboscidea Volcanium](https://adventofcode.com/2022/day/17) |  | HARD! Valves, flow rates, paths. Weighted Graph Algo, Maximum/Minimum Spanning Trees, greedy algorithms, all paths? Ugh.  Reduce and enumerate worked for example.  :( |
 | [17: Pyroclastic Flow](https://adventofcode.com/2022/day/17) |⭐⭐| Tetris with volcanic rocks! Part 2 is an annoying repetition detection thing. A spreadsheet helps.  Also helps to realize repetition implies, THE WHOLE OF THE DATASET will repeat, so ANY part of it also repeats. |
 | [18: Boiling Boulders](https://adventofcode.com/2022/day/18) |⭐⭐| Finding air in 3-space. Part 2 is finding open air only. |
 | [19: Not Enough Minerals](https://adventofcode.com/2022/day/19) || Robot factory processing Clay, Ore, Obsidian, Geode. |
-| [20: Grove Positioning System](https://adventofcode.com/2022/day/20) || Seemingly simple unscramble. Anything but!! |
-| [21: Monkey Math](https://adventofcode.com/2022/day/21) |  |  |
+| [20: Grove Positioning System](https://adventofcode.com/2022/day/20) || Seemingly simple unscramble. Anything but!! Reverse-Scramblng a list of indices to original (untouched) list.  Works for examples, not puzzle. |
+| [21: Monkey Math](https://adventofcode.com/2022/day/21) |⭐⭐| Part 1 simple algebra chain from known to answer.  Part 2 creates a Jeopardy portion, where the answers are known, the inputs aren't. |
 | [22: Monkey Map](https://adventofcode.com/2022/day/22) |⭐⭐| Part 1 is weird with space on map.  Part 2 is brutal with the extra complexity folded in (pun intended). ~2 days effort!|
-| [23: Unstable Diffusion](https://adventofcode.com/2022/day/23) ||  |
+| [23: Unstable Diffusion](https://adventofcode.com/2022/day/23) |⭐⭐| NSWE Elvish Diffusion. Just follow the numerous rules. |
 | [24: Blizzard Basin](https://adventofcode.com/2022/day/24) |⭐⭐| 4 variants of blizzard treated as groups, move anywhere possible from all possible positions so far.  Done as soon as you reach the end. |
-| [25: Full of Hot Air](https://adventofcode.com/2022/day/25) |⭐| Snafu numbers (like Roman numerals) |
+| [25: Full of Hot Air](https://adventofcode.com/2022/day/25) |⭐| Snafu numbers (like Roman numerals) -- Tricky. |

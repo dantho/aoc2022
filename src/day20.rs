@@ -27,7 +27,7 @@ pub fn part1(input: &[isize]) -> isize {
     // This answers the question: If I'm looking for the scrambled position of the index originally in position i,
     // in what scambled index would I find that?
     let mut input_index_lookup = input_index.clone();
-    // Algo:  mix value indices based on (input) value
+    // Algo:  reverse-scramble indices to original (input) values based on that value -- leave input array untouched
     for i in 0..input.len() {
         // Debug
         let value = input[i];
@@ -64,10 +64,24 @@ pub fn part1(input: &[isize]) -> isize {
             println!("New values:    {:?}", ddd);
         }
     }
-    let index_of_zero = input_index.iter().enumerate()
-        .fold(None,|ndx0, (i, input_ndx)| if 0 == input[*input_ndx] {Some(i)} else {ndx0}).unwrap();
-    dbg!([(1000+index_of_zero) % len,(2000+index_of_zero) % len,(3000+index_of_zero) % len]).iter()
-        .map(|i|dbg!(input[input_index[*i]])).sum()
+
+    // Now that the indices are all reverse-scrambled, use them to de-scramble the input.
+    let mut descrambled_input = input.into_iter()
+        .enumerate()
+        .map(|(orig_ndx, v)| (input_index[orig_ndx], *v))
+        .collect::<Vec<_>>();
+    // Actual descrambling event
+    descrambled_input.sort();
+
+    let input = descrambled_input.into_iter().map(|(_,v)|v).collect::<Vec<_>>();
+
+    let index_of_zero = input.iter()
+        .enumerate()
+        .fold(None, |ndx0, (i, v)| if 0 == *v {Some(i)} else {ndx0})
+        .unwrap();
+
+    dbg!([(1000+index_of_zero) % len,(2000+index_of_zero) % len,(3000+index_of_zero) % len]).into_iter()
+        .map(|i|dbg!(input[i])).sum()
 }
 
 fn signed_mod(v: isize, modulo: usize) -> usize {
