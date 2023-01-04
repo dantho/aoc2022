@@ -2,9 +2,6 @@
 /// DAN AoC: https://adventofcode.com/2022/leaderboard/private/view/380786
 /// HLOTYAK: https://adventofcode.com/2022/leaderboard/private/view/951754
 
-
-use std::cmp::Ordering::{Greater, Equal, Less};
-
 // ********************
 // *** Generator(s) ***
 // ********************/
@@ -21,14 +18,19 @@ pub fn part1(input: &[isize]) -> isize {
     #[cfg(test)]
     println!("Orig values:   {:?}", input);
     let len = dbg!(input.len());
-    // Instead of mixing values, we'll mix ptrs (input index) to those values
+    // Instead of mixing values, we'll mix ptrs (indices) to those values
     let mut input_index: Vec<usize> = (0..len).collect();
     // The above will be scrambled, so we need a descrambler
     // This answers the question: If I'm looking for the scrambled position of the index originally in position i,
     // in what scambled index would I find that?
     let mut input_index_lookup = input_index.clone();
     // Algo:  reverse-scramble indices to original (input) values based on that value -- leave input array untouched
-    for i in 0..input.len() {
+    // The complexity is that forward movement can never end up at the end of the list, but it can end up at the begginning.
+    // And backward motion can never end up at the begginning of the list, but it can end up at the end.
+    // This endpoint management is vital because the final answer depends on absolute positions, not just relative.
+    // When moving forward, insertion between end and beginning becomes new beginning. 
+    // When moving backward, insertion between end and beginning becomes new end.
+    for i in 0..len {
         // Debug
         let value = input[i];
         #[cfg(test)]
@@ -37,26 +39,48 @@ pub fn part1(input: &[isize]) -> isize {
             println!("Index lookup:  {:?}", input_index_lookup);
             println!("Moving '{}'", value);
         }
-        assert_eq!(input[input_index[input_index_lookup[i]]], value);
-
-        let before_pos = input_index_lookup[i];
-        let after_pos = signed_mod(before_pos as isize + value + if value >= 0 {0} else {-1}, len);
-        #[cfg(test)]
-        {
-            dbg!(before_pos);
-            dbg!(after_pos);
+        assert_eq!(input[input_index[input_index_lookup[i]]], value);  // Verify descramble of scramble matches original
+        if value != 0 {
+            // Where is this value (indirectly) right now?
+            let from_pos = input_index_lookup[i];
+            #[cfg(test)] dbg!(from_pos);
+            if value > 0 {
+                // And where should the value be moved?
+                let to_pos = signed_mod(from_pos as isize + value, len);
+                #[cfg(test)] dbg!(to_pos);
+                // mix! (move an element in input_index from the "from" position to just after the "to" position, being careful with endpoints.)
+                let ndx_to_move = input_index[from_pos];
+                #[cfg(test)] dbg!(ndx_to_move);
+                // Start by inserting a copy of the item -- this is simpler than deleting then adding, or doing both simultaneously
+                input_index = if to_pos == len-1 {
+                    [&[ndx_to_move], &input_index[..]].concat()
+                } else {
+                    [&input_index[..=to_pos], &[ndx_to_move], &input_index[to_pos+1..]].concat()
+                };
+                #[cfg(test)] println!("Input Indexes after add: {:?}", input_index);
+                assert_eq!(input_index.len(), len + 1);
+                // Now delete the item from its "from" position, which may have been bumped right by 1.
+                let from_pos = if to_pos < from_pos || to_pos == len-1 {from_pos + 1} else {from_pos};
+                input_index = [&input_index[..from_pos], &input_index[from_pos+1..]].concat();
+                #[cfg(test)] println!("Input Indexes after remove: {:?}", input_index);
+                assert_eq!(input_index.len(), len);
+            } else {
+                // And where should the value be moved?
+                let to_pos = signed_mod(from_pos as isize + value - 1, len);
+                #[cfg(test)] dbg!(to_pos);
+                // mix! (move an element in input_indexes from the "from" position to just after the "to" position, being careful with endpoints.)
+                let ndx_to_move = input_index[from_pos];
+                // Start by inserting a copy of the item -- this is simpler than deleting then adding, or doing both simultaneously
+                input_index = [&input_index[..=to_pos], &[ndx_to_move], &input_index[to_pos+1..]].concat();
+                // Now delete the item from its "from" position, which may have been bumped right by 1.
+                let from_pos = if to_pos < from_pos {from_pos + 1} else {from_pos};
+                input_index = [&input_index[..from_pos], &input_index[from_pos+1..]].concat();
+            }
+            // Now rebuild the index lookup table
+            let mut tmp: Vec<(usize,usize)> = input_index.iter().enumerate().map(|(i,ndx)| (*ndx,i)).collect();
+            tmp.sort();
+            input_index_lookup = tmp.iter().map(|(_,i)|*i).collect();
         }
-        // mix! (move an element in input_indexes from the before position to just after the after position)
-        let ndx_to_move = input_index[before_pos];
-        input_index = match before_pos.cmp(&after_pos) {
-            Less => [&input_index[..before_pos], &input_index[(before_pos+1)..=after_pos], &[ndx_to_move], &input_index[(after_pos+1)..]].concat(),
-            Equal => input_index,
-            Greater => [&input_index[..=after_pos], &[ndx_to_move], &input_index[(after_pos+1)..before_pos], &input_index[(before_pos+1)..]].concat(),
-        };
-        // Now rebuild the index lookup table
-        let mut tmp: Vec<(usize,usize)> = input_index.iter().enumerate().map(|(i,ndx)| (*ndx,i)).collect();
-        tmp.sort();
-        input_index_lookup = tmp.iter().map(|(_,i)|*i).collect();
         // Debug
         #[cfg(test)]
         {
@@ -65,23 +89,20 @@ pub fn part1(input: &[isize]) -> isize {
         }
     }
 
-    // Now that the indices are all reverse-scrambled, use them to de-scramble the input.
-    let mut descrambled_input = input.into_iter()
-        .enumerate()
-        .map(|(orig_ndx, v)| (input_index[orig_ndx], *v))
-        .collect::<Vec<_>>();
-    // Actual descrambling event
-    descrambled_input.sort();
+    // Finally, using the mixed indices, "mix" the inputs to decrypt:
+    let mut mixed_input = Vec::new();
+    for ndx in input_index_lookup {
+        mixed_input.push(input[ndx]);
+    }
 
-    let input = descrambled_input.into_iter().map(|(_,v)|v).collect::<Vec<_>>();
-
-    let index_of_zero = input.iter()
+    let ndx_of_zero = mixed_input.iter()
         .enumerate()
         .fold(None, |ndx0, (i, v)| if 0 == *v {Some(i)} else {ndx0})
         .unwrap();
 
-    dbg!([(1000+index_of_zero) % len,(2000+index_of_zero) % len,(3000+index_of_zero) % len]).into_iter()
-        .map(|i|dbg!(input[i])).sum()
+    dbg!(ndx_of_zero);
+    [(1000+ndx_of_zero) % len,(2000+ndx_of_zero) % len,(3000+ndx_of_zero) % len].into_iter()
+        .map(|ndx|dbg!(mixed_input[ndx])).sum()
 }
 
 fn signed_mod(v: isize, modulo: usize) -> usize {
@@ -121,7 +142,7 @@ mod tests {
 
     #[test]
     fn test_ex1_part1() {
-        assert_eq!(part1(&gen1(EX1)), 3+996);
+        assert_eq!(part1(&gen1(EX1)), 3);
     }
 
     // #[test]
