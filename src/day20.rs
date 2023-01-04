@@ -89,11 +89,12 @@ pub fn part1(input: &[isize]) -> isize {
         }
     }
 
-    // Finally, using the mixed indices, "mix" the inputs to decrypt:
+    // Finally, using the mixed indices, "mix" the inputs to decode:
     let mut mixed_input = Vec::new();
-    for ndx in input_index_lookup {
+    for ndx in input_index {
         mixed_input.push(input[ndx]);
     }
+    assert_eq!(mixed_input.len(), len);
 
     let ndx_of_zero = mixed_input.iter()
         .enumerate()
