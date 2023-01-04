@@ -3,30 +3,26 @@
 /// HLOTYAK: https://adventofcode.com/2022/leaderboard/private/view/951754
 
 use std::collections::HashMap;
-type Vname = [char; 2]; // Two-char arrays are COPY, Strings are not
 
-fn sorted(a: [char; 2], b: [char; 2]) -> ([char; 2], [char; 2]) {
-    if a < b { (a,b) }
-    else { (b,a) }
-}
 // ********************
 // *** Generator(s) ***
 // ********************/
 #[aoc_generator(day16)]
-pub fn gen1(input: &str) -> (HashMap<Vname, u32>, HashMap<(Vname, Vname), u32>) {
+pub fn gen1(input: &str) -> (HashMap<ValveName, u32>, HashMap<(ValveName, ValveName), u32>) {
     let mut flow_rates = HashMap::new();
     let mut tunnels = HashMap::new();
     // Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
+    //    0   1  2    3     4        5                   9
     for line in input.lines() {
         let parts = line.split(' ').collect::<Vec<_>>();
         let mut n = parts[1].chars();
-        let name = [n.next().unwrap(), n.next().unwrap()] as Vname;
+        let name = [n.next().unwrap(), n.next().unwrap()] as ValveName;
         let flow_rate = parts[4][5..parts[4].len()-1].parse().unwrap();
         flow_rates.insert(name, flow_rate);
         let tunnelv = parts[9..].to_vec();
         let tunnelv = tunnelv.into_iter().map(|t| {
             let vname = name;
-            let tname = [t.chars().next().unwrap(), t.chars().next().unwrap()] as Vname;
+            let tname = [t.chars().next().unwrap(), t.chars().next().unwrap()] as ValveName;
             (if vname < tname {
                 (vname, tname)
             } else {
@@ -42,20 +38,20 @@ pub fn gen1(input: &str) -> (HashMap<Vname, u32>, HashMap<(Vname, Vname), u32>) 
 // *** Part1 & Part2 ***
 // *********************
 #[aoc(day16, part1)]
-pub fn part1(input: &(HashMap<Vname, u32>, HashMap<(Vname, Vname), u32>)) -> u32 {
-    let mut flow_rates: HashMap<Vname, u32> = input.0.iter()
+pub fn part1(input: &(HashMap<ValveName, u32>, HashMap<(ValveName, ValveName), u32>)) -> u32 {
+    let mut flow_rates: HashMap<ValveName, u32> = input.0.iter()
         .filter(|(_, flow)| **flow > 0)
         .map(|(s,f)|(*s,*f))
         .collect();
     let mut tunnels = input.1.clone();
 
-    // println!("Flow Rates: {:?}", input.0);
     let mut sorted_conn = tunnels.iter().collect::<Vec<_>>();
     sorted_conn.sort();
+
     println!("Direct connections: {:?}", sorted_conn);
 
-    // Build up paths through maze
-    for _i in 0..100  {
+    // Build up paths through maze (for max anticipated connection depth)
+    for _i in 0..10 {
         for ((aa, bb), dist1) in tunnels.clone() {
             let connections = tunnels.iter().filter_map(|((a,b), dist2)| {
                 match (a==&aa, b==&bb, a==&bb, b==&aa) {
@@ -77,17 +73,24 @@ pub fn part1(input: &(HashMap<Vname, u32>, HashMap<(Vname, Vname), u32>)) -> u32
     sorted_conn.sort();
     println!("All connections: {:?}", sorted_conn);
 
-    let starting_loc: Vname = ['A', 'A'];
+    let starting_loc: ValveName = ['A', 'A'];
     flow_rates.insert(starting_loc, 0);
 
     max_flow(30, starting_loc, flow_rates, &tunnels)
 
 }
 
+type ValveName = [char; 2]; // Two-char arrays are COPY, Strings are not
+
+fn sorted(a: [char; 2], b: [char; 2]) -> ([char; 2], [char; 2]) {
+    if a < b { (a,b) }
+    else { (b,a) }
+}
+
 // Based on still-closed valves and minutes remaining,
 // choose each possible valve and recurse down on the others
 // return max flow obtained by all possible [next] choices made at this level
-fn max_flow(minutes_remaining_after_open: u32, this_valve: Vname, mut flow_rates: HashMap<Vname, u32>, tunnels: &HashMap<(Vname, Vname), u32>) -> u32 {
+fn max_flow(minutes_remaining_after_open: u32, this_valve: ValveName, mut flow_rates: HashMap<ValveName, u32>, tunnels: &HashMap<(ValveName, ValveName), u32>) -> u32 {
     let this_flow = flow_rates[&this_valve] * minutes_remaining_after_open;
     flow_rates.remove(&this_valve);
     if let Some(max_remaining) = flow_rates.keys().map(|valve| {
