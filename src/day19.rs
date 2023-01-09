@@ -29,6 +29,18 @@ pub fn part1(input: &[Vec<usize>]) -> usize {
     }).sum()
 }
 
+#[aoc(day19, part2)]
+pub fn part2(input: &[Vec<usize>]) -> usize {
+    const MINUTES_OF_OPERATION: usize = 32;
+    let blueprints: Vec<Factory> = input.iter().take(3)
+    .map(|params| Factory::new(params))
+    .collect();
+
+    blueprints.iter().map(|blueprint| {
+        blueprint.quality_level(MINUTES_OF_OPERATION)/blueprint.blueprint
+    }).product()
+}
+
 // *********************
 // ***** Utilities *****
 // *********************
