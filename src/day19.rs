@@ -1,5 +1,3 @@
-use std::future;
-
 /// https://adventofcode.com/2022/day/19
 /// DAN AoC: https://adventofcode.com/2022/leaderboard/private/view/380786
 /// HLOTYAK: https://adventofcode.com/2022/leaderboard/private/view/951754
@@ -21,7 +19,7 @@ pub fn gen1(input: &str) -> Vec<Vec<usize>> {
 // *********************
 #[aoc(day19, part1)]
 pub fn part1(input: &[Vec<usize>]) -> usize {
-    const MINUTES_OF_OPERATION: usize = 24;
+    const MINUTES_OF_OPERATION: usize = 18;
     let blueprints: Vec<Factory> = input.iter()
     .map(|params| Factory::new(params))
     .collect();
@@ -54,24 +52,24 @@ fn parse_numbers_usize(s: &str) -> Vec<usize> {
 // *********************
 #[derive(Clone, Copy, Debug)]
 pub enum Material {
-    Ore(usize),
-    Clay(usize),
-    Obsidian(usize),
-    Geode(usize),
+    Ore,
+    Clay,
+    Obsidian,
+    Geode,
 }
 
 #[derive(Clone, Debug)]
 pub struct Robot {
     #[allow(dead_code)]
     produces: Material,
-    cost: [Material;3],
+    cost: [usize;3],
     count: usize,
 }
 
 #[derive(Clone, Debug)]
 pub struct Factory {
     blueprint: usize,
-    inventory: [Material;4],
+    inventory: [usize;4],
     robots: [Robot; 4],
     max_robots: [usize; 4],
 }
@@ -79,40 +77,36 @@ pub struct Factory {
 impl Factory {
     fn new(input: &[usize]) -> Self {
         let blueprint = input[0];
-        let inventory = [
-            Ore(0),
-            Clay(0),
-            Obsidian(0),
-            Geode(0),
-        ];
+        let inventory = [0, 0, 0, 0];
         // a robot
-        let produces = Ore(1);
-        let cost = [Ore(input[1]), Clay(0), Obsidian(0)];
+        let produces = Ore;
+        let cost = [input[1], 0, 0];
         let ore = Robot { produces, cost, count: 1 };
         // a robot
-        let produces = Clay(1);
-        let cost = [Ore(input[2]), Clay(0), Obsidian(0)];
+        let produces = Clay;
+        let cost = [input[2], 0, 0];
         let clay = Robot { produces, cost, count: 0 };
         // a robot
-        let produces = Obsidian(1);
-        let cost = [Ore(input[3]), Clay(input[4]), Obsidian(0)];
+        let produces = Obsidian;
+        let cost = [input[3], input[4], 0];
         let obsidian = Robot { produces, cost, count: 0 };
         // a robot
-        let produces = Geode(1);
-        let cost = [Ore(input[5]), Clay(0), Obsidian(input[6])];
+        let produces = Geode;
+        let cost = [input[5], 0, input[6]];
         let geode = Robot { produces, cost, count: 0 };
 
         let robots = [ore, clay, obsidian, geode];
 
         // Limit Robot count to most expensive cost for any robot type (except Geode)
-        let max_robots = [Ore(0), Clay(0), Obsidian(0), Geode(0)].into_iter()
+        let max_robots = [Ore, Clay, Obsidian, Geode].into_iter()
             .fold([0,0,0,usize::MAX],|[ore_max, clay_max, obs_max, geode], robot_type| {
-                if let [Ore(ore), Clay(c), Obsidian(obs)] = match robot_type {
-                    Ore(_) => robots[0].cost,
-                    Clay(_) => robots[1].cost,
-                    Obsidian(_) => robots[2].cost,
-                    Geode(_) => robots[3].cost,
-                } {[ore_max.max(ore), clay_max.max(c), obs_max.max(obs), geode]} else {panic!("Error")}                
+                let [ore, c, obs] = match robot_type {
+                    Ore => robots[0].cost,
+                    Clay => robots[1].cost,
+                    Obsidian => robots[2].cost,
+                    Geode => robots[3].cost,
+                };
+                [ore_max.max(ore), clay_max.max(c), obs_max.max(obs), geode]
             });
 
         Factory { blueprint, inventory, robots, max_robots}
@@ -120,19 +114,19 @@ impl Factory {
 
     fn quality_level(&self, minutes_remaining: usize) -> usize {
             if minutes_remaining == 0 {
-                let geode_cnt = if let Geode(g) = self.inventory[3] {g} else {panic!("Should be Geode()")};
+                let geode_cnt = self.inventory[3];
                 // This terminates recursion
                 return self.blueprint * geode_cnt;
             }
             let [new_ore, new_clay, new_obs, new_geode] = self.produce();
             // Now let's consider the build options from this one factory at this minute
             let mut list_of_options = Vec::new();
-            if self.can_build(Geode(0)) {
-                list_of_options.push(Some(Geode(0)))
+            if self.can_build(Geode) {
+                list_of_options.push(Some(Geode))
             } else {
-                if self.can_build(Obsidian(0)) {list_of_options.push(Some(Obsidian(0)))};
-                if self.can_build(Clay(0)) {list_of_options.push(Some(Clay(0)))};
-                if self.can_build(Ore(0)) {list_of_options.push(Some(Ore(0)))};
+                if self.can_build(Obsidian) {list_of_options.push(Some(Obsidian))};
+                if self.can_build(Clay) {list_of_options.push(Some(Clay))};
+                if self.can_build(Ore) {list_of_options.push(Some(Ore))};
                 list_of_options.push(None); // Choose to build nothing
             };
             list_of_options.into_iter()
@@ -143,15 +137,15 @@ impl Factory {
                     ff.build(robot_type);
                 }
                 // Update inventory based on production (determined above)
-                let [ore, clay, obs, geode] = if let [Ore(ore), Clay(c), Obsidian(obs), Geode(g)] = ff.inventory {[ore,c,obs,g]} else {panic!("Error")};
+                let [ore, clay, obs, geode] = ff.inventory;
                 ff.inventory = [
-                    Ore(ore + new_ore),
-                    Clay(clay + new_clay),
-                    Obsidian(obs + new_obs),
-                    Geode(geode + new_geode),
+                    ore + new_ore,
+                    clay + new_clay,
+                    obs + new_obs,
+                    geode + new_geode,
                 ];
                 let max_geode = max_quality / ff.blueprint;
-                let geode_cnt = if let Geode(g) = ff.inventory[3] {g} else {panic!("Should be Geode()")};
+                let geode_cnt = ff.inventory[3];
                 let geode_robots = ff.robots[3].count;
                 let estimated_max = (0..minutes_remaining).fold((geode_robots, geode_cnt),|(future_robots, future_geode), _| (future_robots+1, future_geode + future_robots)).1;
                 if estimated_max < max_geode {
@@ -176,20 +170,20 @@ impl Factory {
 
     fn can_build(&self, robot_type: Material) -> bool {
         // Get existing resources in inventory
-        let [ore, clay, obs, _geode] = if let [Ore(ore), Clay(c), Obsidian(obs), Geode(g)] = self.inventory {[ore,c,obs,g]} else {panic!("Error")};
+        let [ore, clay, obs, _geode] = self.inventory;
         // And cost of selected robot type
-        let [ore_cost, clay_cost, obs_cost] = if let [Ore(ore), Clay(c), Obsidian(obs)] = match robot_type {
-            Ore(_) => self.robots[0].cost,
-            Clay(_) => self.robots[1].cost,
-            Obsidian(_) => self.robots[2].cost,
-            Geode(_) => self.robots[3].cost,
-        } {[ore,c,obs]} else {panic!("Error")};
+        let [ore_cost, clay_cost, obs_cost] = match robot_type {
+            Ore => self.robots[0].cost,
+            Clay => self.robots[1].cost,
+            Obsidian => self.robots[2].cost,
+            Geode => self.robots[3].cost,
+        };
         // Check robot limit of selected robot type
         let robot_limit_reached = match robot_type {
-            Ore(_) => self.robots[0].count >= self.max_robots[0],
-            Clay(_) => self.robots[1].count >= self.max_robots[1],
-            Obsidian(_) => self.robots[2].count >= self.max_robots[2],
-            Geode(_) => self.robots[3].count >= self.max_robots[3],
+            Ore => self.robots[0].count >= self.max_robots[0],
+            Clay => self.robots[1].count >= self.max_robots[1],
+            Obsidian => self.robots[2].count >= self.max_robots[2],
+            Geode => self.robots[3].count >= self.max_robots[3],
         };
         if robot_limit_reached {
             false
@@ -201,30 +195,30 @@ impl Factory {
     fn build(&mut self, robot_type: Material) {
         assert!(self.can_build(robot_type));
         // Get existing resources in inventory
-        let [mut ore, mut clay, mut obs, geode] = if let [Ore(ore), Clay(c), Obsidian(obs), Geode(g)] = self.inventory {[ore,c,obs,g]} else {panic!("Error")};
+        let [mut ore, mut clay, mut obs, geode] = self.inventory;
         // Determine cost of this robot type
-        let [ore_cost, clay_cost, obs_cost] = if let [Ore(ore), Clay(c), Obsidian(obs)] = match robot_type {
-            Ore(_) => self.robots[0].cost,
-            Clay(_) => self.robots[1].cost,
-            Obsidian(_) => self.robots[2].cost,
-            Geode(_) => self.robots[3].cost,
-        } {[ore,c,obs]} else {panic!("Error")};
+        let [ore_cost, clay_cost, obs_cost] = match robot_type {
+            Ore => self.robots[0].cost,
+            Clay => self.robots[1].cost,
+            Obsidian => self.robots[2].cost,
+            Geode => self.robots[3].cost,
+        };
         // Pay for the robot
         ore -= ore_cost;
         clay -= clay_cost;
         obs -= obs_cost;
         self.inventory = [
-            Ore(ore),
-            Clay(clay),
-            Obsidian(obs),
-            Geode(geode)
+            ore,
+            clay,
+            obs,
+            geode
         ];
         // Build the robot
         match robot_type {
-            Ore(_) => self.robots[0].count += 1,
-            Clay(_) => self.robots[1].count += 1,
-            Obsidian(_) => self.robots[2].count += 1,
-            Geode(_) => self.robots[3].count += 1,
+            Ore => self.robots[0].count += 1,
+            Clay => self.robots[1].count += 1,
+            Obsidian => self.robots[2].count += 1,
+            Geode => self.robots[3].count += 1,
         };
     }
 }
