@@ -19,7 +19,7 @@ pub fn gen1(input: &str) -> Vec<Vec<usize>> {
 // *********************
 #[aoc(day19, part1)]
 pub fn part1(input: &[Vec<usize>]) -> usize {
-    const MINUTES_OF_OPERATION: usize = 18;
+    const MINUTES_OF_OPERATION: usize = 24;
     let blueprints: Vec<Factory> = input.iter()
     .map(|params| Factory::new(params))
     .collect();
