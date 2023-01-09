@@ -1,3 +1,5 @@
+use std::future;
+
 /// https://adventofcode.com/2022/day/19
 /// DAN AoC: https://adventofcode.com/2022/leaderboard/private/view/380786
 /// HLOTYAK: https://adventofcode.com/2022/leaderboard/private/view/951754
@@ -19,7 +21,7 @@ pub fn gen1(input: &str) -> Vec<Vec<usize>> {
 // *********************
 #[aoc(day19, part1)]
 pub fn part1(input: &[Vec<usize>]) -> usize {
-    const MINUTES_OF_OPERATION: usize = 18;
+    const MINUTES_OF_OPERATION: usize = 24;
     let blueprints: Vec<Factory> = input.iter()
     .map(|params| Factory::new(params))
     .collect();
@@ -71,6 +73,7 @@ pub struct Factory {
     blueprint: usize,
     inventory: [Material;4],
     robots: [Robot; 4],
+    max_robots: [usize; 4],
 }
 
 impl Factory {
@@ -101,7 +104,18 @@ impl Factory {
 
         let robots = [ore, clay, obsidian, geode];
 
-        Factory { blueprint, inventory, robots}
+        // Limit Robot count to most expensive cost for any robot type (except Geode)
+        let max_robots = [Ore(0), Clay(0), Obsidian(0), Geode(0)].into_iter()
+            .fold([0,0,0,usize::MAX],|[ore_max, clay_max, obs_max, geode], robot_type| {
+                if let [Ore(ore), Clay(c), Obsidian(obs)] = match robot_type {
+                    Ore(_) => robots[0].cost,
+                    Clay(_) => robots[1].cost,
+                    Obsidian(_) => robots[2].cost,
+                    Geode(_) => robots[3].cost,
+                } {[ore_max.max(ore), clay_max.max(c), obs_max.max(obs), geode]} else {panic!("Error")}                
+            });
+
+        Factory { blueprint, inventory, robots, max_robots}
     }
 
     fn quality_level(&self, minutes_remaining: usize) -> usize {
@@ -112,11 +126,15 @@ impl Factory {
             }
             let [new_ore, new_clay, new_obs, new_geode] = self.produce();
             // Now let's consider the build options from this one factory at this minute
-            let mut list_of_options = vec![None]; // Not building a robot is always an option
-            if self.can_build(Ore(0)) {list_of_options.push(Some(Ore(0)))};
-            if self.can_build(Clay(0)) {list_of_options.push(Some(Clay(0)))};
-            if self.can_build(Obsidian(0)) {list_of_options.push(Some(Obsidian(0)))};
-            if self.can_build(Geode(0)) {list_of_options.push(Some(Geode(0)))};
+            let mut list_of_options = Vec::new();
+            if self.can_build(Geode(0)) {
+                list_of_options.push(Some(Geode(0)))
+            } else {
+                if self.can_build(Obsidian(0)) {list_of_options.push(Some(Obsidian(0)))};
+                if self.can_build(Clay(0)) {list_of_options.push(Some(Clay(0)))};
+                if self.can_build(Ore(0)) {list_of_options.push(Some(Ore(0)))};
+                list_of_options.push(None); // Choose to build nothing
+            };
             list_of_options.into_iter()
             .fold(usize::MIN, |max_quality, build_option| {
                 let mut ff = self.clone();
@@ -132,7 +150,15 @@ impl Factory {
                     Obsidian(obs + new_obs),
                     Geode(geode + new_geode),
                 ];
-                max_quality.max(ff.quality_level(minutes_remaining-1))
+                let max_geode = max_quality / ff.blueprint;
+                let geode_cnt = if let Geode(g) = ff.inventory[3] {g} else {panic!("Should be Geode()")};
+                let geode_robots = ff.robots[3].count;
+                let estimated_max = (0..minutes_remaining).fold((geode_robots, geode_cnt),|(future_robots, future_geode), _| (future_robots+1, future_geode + future_robots)).1;
+                if estimated_max < max_geode {
+                    max_quality // don't bother with this one
+                } else {
+                    max_quality.max(ff.quality_level(minutes_remaining-1))
+                }
             })
     }
 
@@ -158,8 +184,18 @@ impl Factory {
             Obsidian(_) => self.robots[2].cost,
             Geode(_) => self.robots[3].cost,
         } {[ore,c,obs]} else {panic!("Error")};
-
-        ore >= ore_cost && clay >= clay_cost && obs >= obs_cost
+        // Check robot limit of selected robot type
+        let robot_limit_reached = match robot_type {
+            Ore(_) => self.robots[0].count >= self.max_robots[0],
+            Clay(_) => self.robots[1].count >= self.max_robots[1],
+            Obsidian(_) => self.robots[2].count >= self.max_robots[2],
+            Geode(_) => self.robots[3].count >= self.max_robots[3],
+        };
+        if robot_limit_reached {
+            false
+        } else {
+            ore >= ore_cost && clay >= clay_cost && obs >= obs_cost
+        }
     }
 
     fn build(&mut self, robot_type: Material) {
